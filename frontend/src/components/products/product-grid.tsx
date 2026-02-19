@@ -69,18 +69,8 @@ export function ProductCatalog() {
   }, [activeCategoryId]);
 
   return (
-    <div className="flex gap-8 relative">
-      {/* ── Left Sidebar (Desktop only) ── */}
-      <div className="hidden lg:block w-60 shrink-0">
-        <div className="sticky top-24">
-          <SidebarNav
-            activeCategoryId={activeCategoryId}
-            onSelect={handleCategoryChange}
-          />
-        </div>
-      </div>
-
-      {/* ── Horizontal Category Strip (Mobile + Tablet) ── */}
+    <div>
+      {/* ── Horizontal Category Strip (Mobile + Tablet) — outside flex row ── */}
       <div className="lg:hidden sticky top-[57px] sm:top-[80px] z-30 -mx-4 sm:-mx-6">
         <div className="bg-background/95 dark:bg-background/90 backdrop-blur-xl border-b border-border/50">
           <div
@@ -120,11 +110,23 @@ export function ProductCatalog() {
         </div>
       </div>
 
-      {/* ── Main Content ── */}
-      <div
-        ref={contentRef}
-        className="flex-1 min-w-0 scroll-mt-[100px] sm:scroll-mt-[130px] lg:scroll-mt-24"
-      >
+      {/* ── Sidebar + Content row ── */}
+      <div className="flex gap-8 relative">
+        {/* Left Sidebar (Desktop only) */}
+        <div className="hidden lg:block w-60 shrink-0">
+          <div className="sticky top-24">
+            <SidebarNav
+              activeCategoryId={activeCategoryId}
+              onSelect={handleCategoryChange}
+            />
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div
+          ref={contentRef}
+          className="flex-1 min-w-0 scroll-mt-[100px] sm:scroll-mt-[130px] lg:scroll-mt-24"
+        >
         <AnimatePresence mode="wait">
           <motion.div
             key={activeCategoryId}
@@ -207,6 +209,7 @@ export function ProductCatalog() {
             </div>
           </motion.div>
         </AnimatePresence>
+      </div>
       </div>
     </div>
   );
