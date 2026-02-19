@@ -48,12 +48,21 @@ export function ProductCatalog() {
   const activeHue = categoryHues[activeCategoryId] ?? 176;
   const contentRef = useRef<HTMLDivElement>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pillsRef = useRef<HTMLDivElement>(null);
 
   const handleCategoryChange = (id: string) => {
     setActiveCategoryId(id);
     setMobileMenuOpen(false);
     contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  useEffect(() => {
+    if (!pillsRef.current) return;
+    const activeEl = pillsRef.current.querySelector(`[data-cat-id="${activeCategoryId}"]`);
+    if (activeEl) {
+      activeEl.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "center" });
+    }
+  }, [activeCategoryId]);
 
   return (
     <div className="flex gap-8 relative">
@@ -67,8 +76,49 @@ export function ProductCatalog() {
         </div>
       </div>
 
-      {/* ── Mobile Category Bar ── */}
-      <div className="lg:hidden sticky top-[72px] sm:top-[80px] z-30 -mx-4 sm:-mx-6 px-4 sm:px-6 py-3 bg-background/90 backdrop-blur-xl border-b border-border/50">
+      {/* ── Mobile Horizontal Category Pills ── */}
+      <div className="lg:hidden sticky top-[57px] sm:top-[80px] z-30 -mx-4 sm:-mx-6">
+        <div className="bg-background/90 backdrop-blur-xl border-b border-border/50">
+          <div
+            ref={pillsRef}
+            className="flex gap-1.5 px-4 sm:px-6 py-2.5 overflow-x-auto scrollbar-hide"
+            style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+          >
+            {categories.map((cat) => {
+              const isActive = cat.id === activeCategoryId;
+              const catHue = categoryHues[cat.id] ?? 176;
+              const Icon = iconMap[cat.icon] || GlassWater;
+
+              return (
+                <button
+                  key={cat.id}
+                  data-cat-id={cat.id}
+                  onClick={() => handleCategoryChange(cat.id)}
+                  className={`flex items-center gap-1.5 whitespace-nowrap rounded-full px-3 py-1.5 text-[12px] font-medium transition-all duration-200 shrink-0 ${
+                    isActive
+                      ? "text-white shadow-sm"
+                      : "text-muted-foreground bg-muted/40 border border-border/50 hover:bg-muted/60"
+                  }`}
+                  style={
+                    isActive
+                      ? {
+                          background: `linear-gradient(135deg, oklch(0.5 0.12 ${catHue}), oklch(0.42 0.1 ${catHue + 15}))`,
+                          boxShadow: `0 2px 8px oklch(0.5 0.12 ${catHue} / 0.3)`,
+                        }
+                      : undefined
+                  }
+                >
+                  <Icon className="h-3 w-3" />
+                  {cat.name}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* ── Tablet Category Dropdown (hidden on phone & desktop) ── */}
+      <div className="hidden sm:block lg:hidden sticky top-[82px] z-30 -mx-6 px-6 py-3 bg-background/90 backdrop-blur-xl border-b border-border/50">
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
           className="w-full flex items-center gap-3 rounded-xl border border-border/60 bg-card/80 px-4 py-3 transition-all hover:border-primary/30"
@@ -153,7 +203,7 @@ export function ProductCatalog() {
       </div>
 
       {/* ── Main Content ── */}
-      <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-[72px] sm:scroll-mt-[80px] lg:scroll-mt-24">
+      <div ref={contentRef} className="flex-1 min-w-0 scroll-mt-[100px] sm:scroll-mt-[130px] lg:scroll-mt-24">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeCategoryId}
@@ -162,16 +212,29 @@ export function ProductCatalog() {
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <CategoryBanner
-              id={activeCategoryId}
-              name={activeCategory.name}
-              description={activeCategory.description}
-              icon={activeCategory.icon}
-              groups={activeCategory.groups}
-              hue={activeHue}
-            />
+            {/* Mobile: compact category header */}
+            <div className="sm:hidden mb-4">
+              <MobileCategoryHeader
+                name={activeCategory.name}
+                icon={activeCategory.icon}
+                groups={activeCategory.groups}
+                hue={activeHue}
+              />
+            </div>
 
-            <div className="space-y-6 sm:space-y-8 mt-6 sm:mt-8">
+            {/* Tablet/Desktop: full banner */}
+            <div className="hidden sm:block">
+              <CategoryBanner
+                id={activeCategoryId}
+                name={activeCategory.name}
+                description={activeCategory.description}
+                icon={activeCategory.icon}
+                groups={activeCategory.groups}
+                hue={activeHue}
+              />
+            </div>
+
+            <div className="space-y-4 sm:space-y-8 mt-4 sm:mt-8">
               {activeCategory.groups.map((group, i) => (
                 <motion.div
                   key={group.id}
@@ -195,6 +258,47 @@ export function ProductCatalog() {
   );
 }
 
+/* ─────────────── Mobile Category Header ─────────────── */
+
+function MobileCategoryHeader({
+  name,
+  icon,
+  groups,
+  hue,
+}: {
+  name: string;
+  icon: string;
+  groups: ProductGroup[];
+  hue: number;
+}) {
+  const Icon = iconMap[icon] || GlassWater;
+  const totalProducts = groups.reduce((s, g) => s + g.products.length, 0);
+
+  return (
+    <div className="flex items-center justify-between gap-3">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <div
+          className="h-8 w-8 rounded-lg flex items-center justify-center shrink-0"
+          style={{
+            background: `linear-gradient(135deg, oklch(0.55 0.12 ${hue} / 0.15), oklch(0.55 0.12 ${hue} / 0.06))`,
+            border: `1px solid oklch(0.55 0.12 ${hue} / 0.15)`,
+          }}
+        >
+          <Icon className="h-4 w-4" style={{ color: `oklch(0.5 0.1 ${hue})` }} />
+        </div>
+        <div className="min-w-0">
+          <h2 className="text-base font-bold tracking-tight truncate">{name}</h2>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 shrink-0 text-[11px] text-muted-foreground">
+        <span className="font-semibold text-foreground">{totalProducts}</span> products
+        <span className="text-muted-foreground/40">·</span>
+        <span className="font-semibold text-foreground">{groups.length}</span> {groups.length === 1 ? "range" : "ranges"}
+      </div>
+    </div>
+  );
+}
+
 /* ─────────────── Sidebar Navigation ─────────────── */
 
 function SidebarNav({
@@ -213,7 +317,6 @@ function SidebarNav({
 
   return (
     <nav className="relative rounded-2xl overflow-hidden">
-      {/* Outer glow */}
       <div
         className="absolute -inset-px rounded-2xl pointer-events-none"
         style={{
@@ -222,9 +325,7 @@ function SidebarNav({
         }}
       />
       <div className="relative rounded-2xl border border-border/50 bg-card/90 backdrop-blur-xl overflow-hidden shadow-lg shadow-primary/5">
-        {/* Header with featured active preview */}
         <div className="relative overflow-hidden">
-          {/* Active category background image */}
           <div className="absolute inset-0">
             <AnimatePresence mode="popLayout">
               <motion.div
@@ -283,7 +384,6 @@ function SidebarNav({
               </div>
             </div>
 
-            {/* Active category name */}
             <AnimatePresence mode="wait">
               <motion.p
                 key={activeCategoryId}
@@ -300,7 +400,6 @@ function SidebarNav({
               </motion.p>
             </AnimatePresence>
 
-            {/* Progress dots */}
             <div className="flex items-center gap-1 mt-3">
               {categories.map((cat, i) => (
                 <motion.div
@@ -328,12 +427,11 @@ function SidebarNav({
           </div>
         </div>
 
-        {/* Category List */}
         <div
           className="p-1.5 space-y-0.5 min-h-0 max-h-[calc(100vh-280px)] overflow-y-auto"
           style={{ scrollbarWidth: "thin" }}
         >
-          {categories.map((cat, idx) => {
+          {categories.map((cat) => {
             const Icon = iconMap[cat.icon] || GlassWater;
             const isActive = cat.id === activeCategoryId;
             const catHue = categoryHues[cat.id] ?? 176;
@@ -348,7 +446,6 @@ function SidebarNav({
                 onClick={() => onSelect(cat.id)}
                 className="group relative w-full text-left"
               >
-                {/* Active background */}
                 {isActive && (
                   <motion.div
                     layoutId="sidebarActiveBg"
@@ -367,7 +464,6 @@ function SidebarNav({
                     !isActive ? "hover:bg-muted/40" : ""
                   }`}
                 >
-                  {/* Active left accent */}
                   {isActive && (
                     <motion.div
                       layoutId="sidebarActiveBar"
@@ -384,7 +480,6 @@ function SidebarNav({
                     />
                   )}
 
-                  {/* Image thumbnail */}
                   <div className="relative shrink-0">
                     <div
                       className={`relative h-10 w-10 rounded-xl overflow-hidden transition-all duration-300 ${
@@ -421,7 +516,6 @@ function SidebarNav({
                         />
                       )}
                     </div>
-                    {/* Tiny icon overlay on image */}
                     <div
                       className={`absolute -bottom-0.5 -right-0.5 h-4.5 w-4.5 rounded-md flex items-center justify-center border transition-all duration-300 ${
                         isActive
@@ -433,7 +527,6 @@ function SidebarNav({
                     </div>
                   </div>
 
-                  {/* Text & meta */}
                   <div className="flex-1 min-w-0">
                     <p
                       className={`text-[13px] font-medium truncate transition-colors duration-300 ${
@@ -445,7 +538,6 @@ function SidebarNav({
                       {cat.name}
                     </p>
                     <div className="flex items-center gap-1 mt-0.5">
-                      {/* Mini bar showing relative product count */}
                       <div className="h-1 w-10 rounded-full bg-muted/60 overflow-hidden">
                         <div
                           className="h-full rounded-full transition-all duration-500"
@@ -469,7 +561,6 @@ function SidebarNav({
                     </div>
                   </div>
 
-                  {/* Right indicator */}
                   <motion.div
                     className={`flex items-center justify-center h-6 w-6 rounded-lg shrink-0 transition-all duration-300 ${
                       isActive
@@ -495,7 +586,7 @@ function SidebarNav({
   );
 }
 
-/* ─────────────── Category Banner ─────────────── */
+/* ─────────────── Category Banner (Tablet/Desktop) ─────────────── */
 
 function CategoryBanner({
   id,
@@ -556,27 +647,27 @@ function CategoryBanner({
         }}
       />
 
-      <div className="relative z-10 px-5 py-6 sm:px-8 sm:py-8 lg:px-10 lg:py-10 min-h-[120px] sm:min-h-[150px] lg:min-h-[180px] flex flex-col justify-end">
-        <div className="flex items-start sm:items-center gap-4 mb-3">
+      <div className="relative z-10 px-8 py-8 lg:px-10 lg:py-10 min-h-[150px] lg:min-h-[180px] flex flex-col justify-end">
+        <div className="flex items-center gap-4 mb-3">
           <div
-            className="h-11 w-11 sm:h-12 sm:w-12 rounded-xl sm:rounded-2xl flex items-center justify-center border border-white/15 shrink-0"
+            className="h-12 w-12 rounded-2xl flex items-center justify-center border border-white/15 shrink-0"
             style={{
               background: `linear-gradient(135deg, oklch(0.55 0.12 ${hue} / 0.35), oklch(0.45 0.1 ${hue + 15} / 0.2))`,
               backdropFilter: "blur(16px)",
               boxShadow: `0 4px 16px oklch(0.5 0.12 ${hue} / 0.2)`,
             }}
           >
-            <Icon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+            <Icon className="h-6 w-6 text-white" />
           </div>
           <div>
             <h2
-              className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight"
+              className="text-2xl lg:text-3xl font-bold text-white tracking-tight"
               style={{ textShadow: "0 2px 16px oklch(0 0 0 / 0.5)" }}
             >
               {name}
             </h2>
             <p
-              className="text-white/50 text-xs sm:text-sm max-w-lg leading-relaxed mt-0.5 hidden sm:block"
+              className="text-white/50 text-sm max-w-lg leading-relaxed mt-0.5"
               style={{ textShadow: "0 1px 8px oklch(0 0 0 / 0.3)" }}
             >
               {description}
@@ -584,26 +675,26 @@ function CategoryBanner({
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1">
+        <div className="flex flex-wrap items-center gap-3 mt-1">
           <div
-            className="flex items-center gap-1.5 text-[11px] sm:text-xs text-white/80 font-medium px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-white/10"
+            className="flex items-center gap-1.5 text-xs text-white/80 font-medium px-3 py-1.5 rounded-lg border border-white/10"
             style={{
               background: "oklch(1 0 0 / 0.06)",
               backdropFilter: "blur(8px)",
             }}
           >
-            <Package className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white/60" />
+            <Package className="h-3.5 w-3.5 text-white/60" />
             <span className="font-bold text-white">{totalProducts}</span>
             <span className="text-white/50">products</span>
           </div>
           <div
-            className="flex items-center gap-1.5 text-[11px] sm:text-xs text-white/80 font-medium px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg border border-white/10"
+            className="flex items-center gap-1.5 text-xs text-white/80 font-medium px-3 py-1.5 rounded-lg border border-white/10"
             style={{
               background: "oklch(1 0 0 / 0.06)",
               backdropFilter: "blur(8px)",
             }}
           >
-            <Layers className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-white/60" />
+            <Layers className="h-3.5 w-3.5 text-white/60" />
             <span className="font-bold text-white">{groups.length}</span>
             <span className="text-white/50">
               {groups.length === 1 ? "range" : "ranges"}
@@ -630,7 +721,7 @@ function GroupSection({
 }) {
   return (
     <div
-      className="group/box relative rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-xl"
+      className="group/box relative rounded-xl sm:rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-xl"
       style={{
         border: "1px solid var(--border)",
         background: "var(--card)",
@@ -638,7 +729,6 @@ function GroupSection({
           "0 1px 4px oklch(0 0 0 / 0.03), 0 4px 16px oklch(0 0 0 / 0.02)",
       }}
     >
-      {/* Hover outer glow */}
       <div
         className="absolute -inset-1 rounded-2xl opacity-0 group-hover/box:opacity-100 transition-opacity duration-600 pointer-events-none -z-10 blur-2xl"
         style={{ background: `oklch(0.55 0.12 ${hue} / 0.06)` }}
@@ -655,12 +745,12 @@ function GroupSection({
       </div>
 
       {/* Header */}
-      <div className="relative px-4 py-4 sm:px-6 sm:py-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
+      <div className="relative px-3 py-3 sm:px-6 sm:py-5">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {showIndex && (
               <span
-                className="flex-shrink-0 h-8 w-8 sm:h-9 sm:w-9 rounded-xl flex items-center justify-center text-[11px] sm:text-xs font-extrabold"
+                className="flex-shrink-0 h-6 w-6 sm:h-9 sm:w-9 rounded-lg sm:rounded-xl flex items-center justify-center text-[10px] sm:text-xs font-extrabold"
                 style={{
                   background: `linear-gradient(135deg, oklch(0.55 0.12 ${hue} / 0.12), oklch(0.55 0.12 ${hue} / 0.05))`,
                   color: `oklch(var(--subtle-text-l) 0.12 ${hue})`,
@@ -671,28 +761,26 @@ function GroupSection({
               </span>
             )}
             <div className="min-w-0">
-              <h3 className="text-sm sm:text-base lg:text-lg font-bold tracking-tight group-hover/box:text-primary transition-colors duration-300">
+              <h3 className="text-[13px] sm:text-base lg:text-lg font-bold tracking-tight group-hover/box:text-primary transition-colors duration-300 truncate">
                 {group.name}
               </h3>
               {group.features && (
-                <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1 max-w-md">
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 line-clamp-1 max-w-md hidden sm:block">
                   {group.features}
                 </p>
               )}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             {group.defaultPack && (
-              <span
-                className="hidden sm:inline-flex text-[10px] sm:text-[11px] font-medium text-muted-foreground rounded-lg px-2 sm:px-2.5 py-0.5 sm:py-1 border border-border bg-muted/30"
-              >
+              <span className="hidden sm:inline-flex text-[11px] font-medium text-muted-foreground rounded-lg px-2.5 py-1 border border-border bg-muted/30">
                 {group.defaultPack}
               </span>
             )}
             {group.defaultPrice && (
               <span
-                className="text-[10px] sm:text-[11px] font-bold rounded-lg px-2 sm:px-2.5 py-0.5 sm:py-1"
+                className="text-[10px] sm:text-[11px] font-bold rounded-md sm:rounded-lg px-2 py-0.5 sm:px-2.5 sm:py-1"
                 style={{
                   background: `oklch(0.55 0.12 ${hue} / 0.1)`,
                   color: `oklch(var(--subtle-text-l) 0.12 ${hue})`,
@@ -702,7 +790,7 @@ function GroupSection({
                 {group.defaultPrice}
               </span>
             )}
-            <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground/70">
+            <span className="text-[10px] text-muted-foreground/70 hidden sm:inline">
               {group.products.length} item
               {group.products.length !== 1 ? "s" : ""}
             </span>
@@ -711,7 +799,7 @@ function GroupSection({
       </div>
 
       {/* Divider */}
-      <div className="mx-4 sm:mx-6 relative">
+      <div className="mx-3 sm:mx-6 relative">
         <div className="h-px bg-border/40 dark:bg-border/20" />
         <div
           className="absolute top-0 left-0 h-px w-0 group-hover/box:w-1/3 transition-all duration-700"
@@ -721,9 +809,77 @@ function GroupSection({
         />
       </div>
 
-      {/* Product grid */}
-      <div className="p-3 sm:p-5 lg:p-6">
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4 sm:gap-4">
+      {/* Product grid — compact list on mobile, cards on tablet+ */}
+      <div className="p-2 sm:p-5 lg:p-6">
+        {/* Mobile: compact list */}
+        <div className="sm:hidden space-y-0.5">
+          {group.products.map((product, i) => {
+            const pack = product.pack || group.defaultPack;
+            const price = product.price || group.defaultPrice;
+
+            return (
+              <motion.div
+                key={`${product.name}-${i}`}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: i * 0.02, duration: 0.3 }}
+                className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-muted/30 transition-colors"
+              >
+                {/* Product icon / tiny image */}
+                {product.image ? (
+                  <div className="relative h-9 w-9 rounded-lg overflow-hidden shrink-0 border border-border/50">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                      sizes="36px"
+                    />
+                  </div>
+                ) : (
+                  <div
+                    className="h-9 w-9 rounded-lg flex items-center justify-center shrink-0 text-[10px] font-bold"
+                    style={{
+                      background: `linear-gradient(135deg, oklch(0.55 0.12 ${hue} / 0.1), oklch(0.55 0.12 ${hue} / 0.04))`,
+                      color: `oklch(var(--subtle-text-l) 0.1 ${hue})`,
+                      border: `1px solid oklch(0.55 0.12 ${hue} / 0.08)`,
+                    }}
+                  >
+                    {product.name.split(" ").slice(0, 2).map(w => w[0]).join("").toUpperCase()}
+                  </div>
+                )}
+
+                {/* Name */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[12px] font-semibold leading-tight line-clamp-2">
+                    {product.name}
+                  </p>
+                  {pack && (
+                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">
+                      {pack}
+                    </p>
+                  )}
+                </div>
+
+                {/* Price */}
+                {price && (
+                  <span
+                    className="text-[11px] font-bold shrink-0 rounded-md px-2 py-0.5"
+                    style={{
+                      background: `oklch(0.55 0.12 ${hue} / 0.08)`,
+                      color: `oklch(var(--subtle-text-l) 0.12 ${hue})`,
+                    }}
+                  >
+                    {price}
+                  </span>
+                )}
+              </motion.div>
+            );
+          })}
+        </div>
+
+        {/* Tablet/Desktop: card grid */}
+        <div className="hidden sm:grid sm:grid-cols-3 lg:grid-cols-4 gap-4">
           {group.products.map((product, i) => (
             <ProductCard
               key={`${product.name}-${i}`}
