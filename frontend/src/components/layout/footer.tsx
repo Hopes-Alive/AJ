@@ -33,7 +33,7 @@ export function Footer() {
 
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* ── Brand banner ── */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6 pt-14 pb-10 sm:pt-16 sm:pb-12">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 sm:gap-6 pt-10 pb-8 sm:pt-14 sm:pb-10 lg:pt-16 lg:pb-12">
           <Link href="/" className="inline-block group flex-shrink-0">
             <div className="relative">
               <Image
@@ -41,7 +41,7 @@ export function Footer() {
                 alt="AJ Fresh Foods"
                 width={110}
                 height={110}
-                className="rounded-2xl transition-transform duration-300 group-hover:scale-105"
+                className="rounded-2xl transition-transform duration-300 group-hover:scale-105 w-20 h-20 sm:w-[110px] sm:h-[110px]"
               />
               {/* Glow behind logo */}
               <div
@@ -54,7 +54,7 @@ export function Footer() {
           </Link>
 
           <div>
-            <h3 className="text-2xl font-bold tracking-tight text-foreground">
+            <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
               AJ Fresh Foods
             </h3>
             <p className="text-xs text-primary font-semibold uppercase tracking-[0.2em] mt-1">
@@ -71,7 +71,7 @@ export function Footer() {
         <div className="h-px bg-border/50 dark:bg-border/30" />
 
         {/* ── Columns ── */}
-        <div className="grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:gap-10 py-8 sm:py-12 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           {/* Contact */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-widest text-foreground/40 mb-6">

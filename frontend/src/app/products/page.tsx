@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function ProductsPage() {
   return (
-    <section className="relative py-20 sm:py-24">
+    <section className="relative py-12 sm:py-16 lg:py-20">
       <div className="absolute inset-0 bg-gradient-mesh opacity-30" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeader

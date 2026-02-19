@@ -9,7 +9,7 @@ const duplicated = [...featuredBrands, ...featuredBrands];
 
 export function FeaturedBrands() {
   return (
-    <section className="py-16 sm:py-20 relative overflow-hidden">
+    <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
       {/* Light bg */}
       <div
         className="absolute inset-0 dark:hidden"
@@ -44,7 +44,7 @@ export function FeaturedBrands() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
             <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
               Trusted Partners

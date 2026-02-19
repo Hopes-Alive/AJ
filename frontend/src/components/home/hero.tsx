@@ -20,7 +20,7 @@ export function Hero() {
   const [imgErr, setImgErr] = useState(false);
 
   return (
-    <section className="relative overflow-hidden h-[85vh] min-h-[540px] max-h-[800px] flex items-center justify-center">
+    <section className="relative overflow-hidden h-[85vh] min-h-[380px] sm:min-h-[540px] max-h-[800px] flex items-center justify-center">
       {/* ─── Background image with slow zoom ─── */}
       <motion.div
         className="absolute inset-0 z-0"
@@ -69,7 +69,7 @@ export function Hero() {
       <div className="absolute bottom-0 inset-x-0 h-40 z-[2] bg-gradient-to-t from-background via-background/60 to-transparent" />
 
       {/* ─── Content ─── */}
-      <div className="relative z-[3] mx-auto max-w-4xl px-6 text-center">
+      <div className="relative z-[3] mx-auto max-w-4xl px-4 sm:px-6 text-center">
         {/* Logo mark */}
         <motion.div {...fadeUp(0.05)} className="mb-6 inline-block">
           <Image
@@ -77,7 +77,7 @@ export function Hero() {
             alt="AJ Fresh Foods"
             width={110}
             height={110}
-            className="brightness-0 invert opacity-90 drop-shadow-[0_2px_16px_oklch(0_0_0/0.4)]"
+            className="w-20 h-20 sm:w-[110px] sm:h-[110px] brightness-0 invert opacity-90 drop-shadow-[0_2px_16px_oklch(0_0_0/0.4)]"
           />
         </motion.div>
 

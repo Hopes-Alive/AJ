@@ -7,7 +7,7 @@ import { ArrowRight, Phone } from "lucide-react";
 
 export function CTA() {
   return (
-    <section className="py-20 sm:py-24 relative overflow-hidden">
+    <section className="py-14 sm:py-20 lg:py-24 relative overflow-hidden">
       <div
         className="absolute top-0 inset-x-0 h-px"
         style={{
@@ -64,8 +64,8 @@ export function CTA() {
           />
 
           {/* Content */}
-          <div className="relative z-10 px-8 py-16 sm:px-16 sm:py-20">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight">
+          <div className="relative z-10 px-4 py-12 sm:px-8 sm:py-16 lg:px-16 lg:py-20">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-white tracking-tight">
               Ready to Stock Your Store?
             </h2>
             <p className="mt-5 text-white/65 text-base sm:text-lg max-w-lg mx-auto leading-relaxed">

@@ -62,7 +62,7 @@ export function Testimonials() {
   const t = testimonials[active];
 
   return (
-    <section className="py-20 sm:py-28 relative overflow-hidden">
+    <section className="py-14 sm:py-20 lg:py-28 relative overflow-hidden">
       {/* Background */}
       <div
         className="absolute inset-0 dark:hidden"
@@ -95,7 +95,7 @@ export function Testimonials() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-14 sm:mb-16"
+          className="text-center mb-10 sm:mb-14 lg:mb-16"
         >
           <p className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/60 mb-2">
             Customer Reviews
@@ -110,7 +110,7 @@ export function Testimonials() {
         <div className="relative max-w-3xl mx-auto">
           {/* Large quote marks */}
           <div
-            className="absolute -top-6 -left-2 sm:-left-8 text-[8rem] leading-none font-serif pointer-events-none select-none"
+            className="absolute -top-4 sm:-top-6 -left-1 sm:-left-8 text-[4rem] sm:text-[6rem] lg:text-[8rem] leading-none font-serif pointer-events-none select-none"
             style={{
               color: "oklch(0.55 0.12 176 / 0.08)",
             }}
@@ -118,7 +118,7 @@ export function Testimonials() {
             &ldquo;
           </div>
 
-          <div className="relative min-h-[280px] sm:min-h-[240px] flex items-center">
+          <div className="relative min-h-[260px] sm:min-h-[240px] flex items-center pl-6 sm:pl-12">
             <AnimatePresence mode="wait" custom={direction}>
               <motion.div
                 key={active}
@@ -140,7 +140,7 @@ export function Testimonials() {
                 </div>
 
                 {/* Quote */}
-                <blockquote className="text-xl sm:text-2xl lg:text-[1.7rem] font-medium leading-relaxed tracking-tight">
+                <blockquote className="text-lg sm:text-xl lg:text-2xl xl:text-[1.7rem] font-medium leading-relaxed tracking-tight">
                   &ldquo;{t.text}&rdquo;
                 </blockquote>
 

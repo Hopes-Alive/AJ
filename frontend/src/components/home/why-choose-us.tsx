@@ -87,7 +87,7 @@ const reasons: {
 
 export function WhyChooseUs() {
   return (
-    <section className="relative py-24 sm:py-32 overflow-hidden">
+    <section className="relative py-16 sm:py-24 lg:py-32 overflow-hidden">
       {/* Light mode bg */}
       <div className="absolute inset-0 bg-muted/40 dark:hidden" />
       {/* Dark mode surface */}
@@ -132,7 +132,7 @@ export function WhyChooseUs() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-20 sm:mb-24"
+          className="text-center mb-12 sm:mb-20 lg:mb-24"
         >
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
@@ -151,11 +151,11 @@ export function WhyChooseUs() {
               Why Choose Us
             </span>
           </motion.div>
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl lg:text-5xl">
+          <h2 className="text-2xl font-bold tracking-tight sm:text-3xl lg:text-4xl xl:text-5xl">
             Why Choose{" "}
             <span className="text-gradient">AJ Fresh Foods</span>
           </h2>
-          <p className="mt-4 text-muted-foreground max-w-2xl mx-auto text-lg">
+          <p className="mt-4 text-muted-foreground max-w-2xl mx-auto text-base sm:text-lg">
             More than a supplier — we&apos;re your wholesale growth partner.
           </p>
         </motion.div>
@@ -171,7 +171,7 @@ export function WhyChooseUs() {
           />
         </div>
 
-        <div className="flex flex-col gap-20 sm:gap-24 lg:gap-32">
+        <div className="flex flex-col gap-12 sm:gap-20 lg:gap-24 xl:gap-32">
           {reasons.map((reason, i) => (
             <ReasonRow key={reason.title} reason={reason} index={i} />
           ))}
@@ -244,18 +244,18 @@ function ReasonRow({
           duration: 0.8,
           ease: [0.25, 0.46, 0.45, 0.94],
         }}
-        className={`grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-16 xl:gap-24 items-center`}
+        className={`grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-10 lg:gap-16 xl:gap-24 items-center`}
       >
         {/* ── Image side ── */}
         <motion.div
-          className={`relative ${isReversed ? "lg:order-2" : "lg:order-1"}`}
+          className={`relative overflow-hidden ${isReversed ? "lg:order-2" : "lg:order-1"}`}
           initial={{ opacity: 0, x: isReversed ? 60 : -60 }}
           animate={isInView ? { opacity: 1, x: 0 } : {}}
           transition={{ duration: 0.8, delay: 0.15 }}
         >
           {/* Glow behind the image frame */}
           <div
-            className="absolute -inset-4 rounded-3xl pointer-events-none blur-2xl opacity-40 dark:opacity-30"
+            className="absolute -inset-2 sm:-inset-4 rounded-3xl pointer-events-none blur-2xl opacity-40 dark:opacity-30"
             style={{
               background: `radial-gradient(ellipse at ${isReversed ? "30%" : "70%"} 50%, oklch(0.55 0.12 ${hue} / 0.2), transparent 70%)`,
             }}
@@ -339,7 +339,7 @@ function ReasonRow({
                   }}
                 >
                   <span
-                    className="text-xl font-extrabold"
+                    className="text-lg sm:text-xl font-extrabold"
                     style={{
                       color: `oklch(0.75 0.12 ${hue})`,
                     }}

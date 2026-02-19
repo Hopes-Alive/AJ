@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { Package } from "lucide-react";
 import { Product } from "@/types";
 
 interface ProductCardProps {
@@ -24,100 +25,116 @@ export function ProductCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 12, scale: 0.97 }}
+      initial={{ opacity: 0, y: 14, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay: index * 0.025, duration: 0.35 }}
-      className="group relative flex flex-col rounded-xl overflow-hidden transition-all duration-400"
+      transition={{ delay: index * 0.03, duration: 0.4, ease: "easeOut" }}
+      className="group/card relative flex flex-col rounded-2xl overflow-hidden"
       style={{
         background: "var(--card)",
         border: "1px solid var(--border)",
-        boxShadow: "0 1px 4px oklch(0 0 0 / 0.04), 0 2px 8px oklch(0 0 0 / 0.02)",
+        boxShadow:
+          "0 1px 3px oklch(0 0 0 / 0.04), 0 4px 12px oklch(0 0 0 / 0.02)",
       }}
     >
-      {/* Hover glow behind card */}
+      {/* Hover glow */}
       <div
-        className="absolute -inset-0.5 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-400 -z-10 blur-lg"
-        style={{ background: `oklch(0.55 0.12 ${accentHue} / 0.08)` }}
+        className="absolute -inset-1 rounded-2xl opacity-0 group-hover/card:opacity-100 transition-opacity duration-500 -z-10 blur-xl"
+        style={{ background: `oklch(0.55 0.12 ${accentHue} / 0.1)` }}
       />
 
-      {/* Hover border overlay */}
+      {/* Hover border */}
       <div
-        className="absolute inset-0 rounded-xl pointer-events-none z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-400"
+        className="absolute inset-0 rounded-2xl pointer-events-none z-20 opacity-0 group-hover/card:opacity-100 transition-opacity duration-400"
         style={{
-          border: `1px solid oklch(0.55 0.12 ${accentHue} / 0.2)`,
+          border: `1px solid oklch(0.55 0.12 ${accentHue} / 0.25)`,
         }}
       />
 
-      {/* Top shine edge */}
-      <div
-        className="absolute inset-x-0 top-0 h-px z-10 pointer-events-none"
-        style={{
-          background: "linear-gradient(90deg, transparent 10%, oklch(1 0 0 / var(--highlight-edge-a)) 50%, transparent 90%)",
-        }}
-      />
-
-      {/* Lift & scale on hover via wrapper */}
-      <div className="relative flex flex-col h-full transition-transform duration-400 group-hover:-translate-y-1">
+      <div className="relative flex flex-col h-full transition-transform duration-400 group-hover/card:-translate-y-0.5">
         {/* Image area */}
-        <div className="relative aspect-square overflow-hidden">
+        <div className="relative aspect-[4/3] overflow-hidden bg-muted/20">
           {product.image ? (
             <Image
               src={product.image}
               alt={product.name}
               fill
-              className="object-cover transition-all duration-500 group-hover:scale-105 group-hover:brightness-105"
-              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 20vw"
+              className="object-cover transition-all duration-600 group-hover/card:scale-108"
+              sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           ) : (
             <ProductPlaceholder name={product.name} hue={accentHue} />
           )}
 
-          {/* Glass reflection */}
-          <div className="absolute inset-0 bg-gradient-to-b from-white/8 via-transparent to-black/5 dark:from-white/4 dark:to-black/15 pointer-events-none" />
+          {/* Top gradient */}
+          <div className="absolute inset-x-0 top-0 h-12 bg-gradient-to-b from-black/15 to-transparent pointer-events-none" />
+
+          {/* Bottom gradient */}
+          <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/25 to-transparent pointer-events-none" />
 
           {/* Price badge */}
           {price && (
-            <div
-              className="absolute top-2 right-2 rounded-lg px-2 py-0.5 text-[11px] font-bold text-white z-10"
-              style={{
-                background: `linear-gradient(135deg, oklch(0.5 0.12 ${accentHue} / 0.9), oklch(0.44 0.1 ${accentHue + 12} / 0.9))`,
-                backdropFilter: "blur(8px)",
-                boxShadow: `0 2px 10px oklch(0.5 0.12 ${accentHue} / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.1)`,
-              }}
-            >
-              {price}
+            <div className="absolute top-2.5 right-2.5 z-10">
+              <div
+                className="rounded-lg px-2.5 py-1 text-[11px] sm:text-xs font-bold text-white backdrop-blur-md"
+                style={{
+                  background: `linear-gradient(135deg, oklch(0.48 0.12 ${accentHue} / 0.92), oklch(0.4 0.1 ${accentHue + 15} / 0.92))`,
+                  boxShadow: `0 2px 12px oklch(0.5 0.12 ${accentHue} / 0.35), inset 0 1px 0 oklch(1 0 0 / 0.1)`,
+                }}
+              >
+                {price}
+              </div>
             </div>
           )}
 
-          {/* Bottom image vignette */}
-          <div
-            className="absolute bottom-0 inset-x-0 h-8 pointer-events-none"
-            style={{
-              background: "linear-gradient(to top, oklch(0 0 0 / 0.06), transparent)",
-            }}
-          />
+          {/* Quick info overlay on hover */}
+          <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover/card:translate-y-0 transition-transform duration-400 ease-out z-10 pointer-events-none">
+            <div className="px-3 pb-2.5 pt-6 bg-gradient-to-t from-black/60 to-transparent">
+              {pack && (
+                <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-white/80 backdrop-blur-sm rounded-md px-2 py-0.5"
+                  style={{
+                    background: "oklch(1 0 0 / 0.08)",
+                    border: "1px solid oklch(1 0 0 / 0.08)",
+                  }}
+                >
+                  <Package className="h-2.5 w-2.5 text-white/60" />
+                  {pack}
+                </span>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Info area */}
-        <div className="relative flex flex-col flex-1 p-3 sm:p-3.5">
-          {/* Subtle accent separator */}
+        <div className="relative flex flex-col flex-1 px-3 sm:px-3.5 py-3 sm:py-3.5">
+          {/* Accent top line */}
           <div
-            className="absolute inset-x-3 top-0 h-px pointer-events-none"
+            className="absolute inset-x-0 top-0 h-[2px] opacity-0 group-hover/card:opacity-100 transition-opacity duration-400"
             style={{
-              background: `linear-gradient(90deg, oklch(0.55 0.12 ${accentHue} / 0.08), oklch(0.55 0.12 ${accentHue} / 0.03), transparent)`,
+              background: `linear-gradient(90deg, oklch(0.55 0.12 ${accentHue} / 0.4), oklch(0.55 0.12 ${accentHue} / 0.08) 70%, transparent)`,
             }}
           />
 
-          <h4 className="font-semibold text-[13px] leading-snug group-hover:text-primary transition-colors duration-300 line-clamp-2">
+          <h4 className="font-semibold text-[12px] sm:text-[13px] leading-snug group-hover/card:text-primary transition-colors duration-300 line-clamp-2">
             {product.name}
           </h4>
+
           {pack && (
-            <p className="text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1">
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5 sm:hidden">
               <span
                 className="inline-block h-1 w-1 rounded-full flex-shrink-0"
                 style={{ background: `oklch(0.55 0.12 ${accentHue} / 0.4)` }}
               />
               {pack}
+            </p>
+          )}
+
+          {/* Mobile price */}
+          {price && (
+            <p
+              className="text-[11px] font-bold mt-2 sm:hidden"
+              style={{ color: `oklch(var(--subtle-text-l) 0.12 ${accentHue})` }}
+            >
+              {price}
             </p>
           )}
         </div>
@@ -147,26 +164,26 @@ function ProductPlaceholder({
         background: `linear-gradient(145deg, oklch(var(--placeholder-l) var(--placeholder-c) ${hue}), oklch(calc(var(--placeholder-l) - 0.03) calc(var(--placeholder-c) + 0.005) ${hue + 12}))`,
       }}
     >
-      {/* Ambient light spot */}
+      {/* Ambient glow */}
       <div
-        className="absolute inset-0 opacity-30 pointer-events-none"
+        className="absolute inset-0 opacity-25 pointer-events-none"
         style={{
-          backgroundImage: `radial-gradient(circle at 30% 20%, oklch(1 0 0 / var(--highlight-a)), transparent 50%)`,
+          backgroundImage: `radial-gradient(circle at 30% 25%, oklch(1 0 0 / var(--highlight-a)), transparent 55%)`,
         }}
       />
 
-      {/* Geometric pattern (subtle) */}
+      {/* Dot pattern */}
       <div
         className="absolute inset-0 opacity-[0.03] pointer-events-none"
         style={{
           backgroundImage: `radial-gradient(oklch(0.55 0.12 ${hue} / 0.8) 1px, transparent 1px)`,
-          backgroundSize: "16px 16px",
+          backgroundSize: "18px 18px",
         }}
       />
 
-      {/* Initials badge */}
+      {/* Initials */}
       <div
-        className="relative flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-xl text-base sm:text-lg font-bold transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+        className="relative flex items-center justify-center h-11 w-11 sm:h-14 sm:w-14 rounded-xl text-sm sm:text-lg font-bold transition-transform duration-300 group-hover/card:scale-110"
         style={{
           background: `linear-gradient(135deg, oklch(0.55 0.12 ${hue} / 0.18), oklch(0.55 0.12 ${hue} / 0.08))`,
           color: `oklch(var(--subtle-text-l) 0.1 ${hue})`,
