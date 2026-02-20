@@ -32,7 +32,7 @@ const reasons: {
     bullets: [
       "Sydney, Melbourne, Brisbane, Perth & Adelaide",
       "Flexible scheduling to suit your store hours",
-      "Real-time order tracking & notifications",
+      "Dedicated support for every delivery",
     ],
     image: "/images/why-choose-us/delivery.jpg",
     imageAlt: "Delivery truck on Australian highway",

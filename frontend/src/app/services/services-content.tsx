@@ -17,7 +17,6 @@ import {
   BarChart3,
   Heart,
   Star,
-  Globe,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -47,7 +46,7 @@ const services = [
     features: [
       "Scheduled weekly deliveries",
       "Australia-wide coverage",
-      "Real-time delivery updates",
+      "Dedicated delivery support",
       "Flexible drop-off times",
     ],
     image: "/images/categories/household.jpg",
@@ -511,61 +510,103 @@ export function ServicesContent() {
                     backgroundSize: "20px 20px",
                   }}
                 />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative">
-                    {[80, 130, 180].map((size, idx) => (
-                      <motion.div
-                        key={size}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/15"
-                        style={{ width: size * 2, height: size * 2 }}
-                        animate={{
-                          scale: [1, 1.05, 1],
-                          opacity: [0.3, 0.6, 0.3],
-                        }}
-                        transition={{
-                          duration: 3,
-                          delay: idx * 0.5,
-                          repeat: Infinity,
-                        }}
-                      />
-                    ))}
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-muted/20 dark:from-primary/10 dark:to-muted/10" />
 
-                    <div className="relative flex h-28 w-28 items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal-600 shadow-2xl glow-md">
-                      <div className="text-center text-primary-foreground">
-                        <Globe className="h-7 w-7 mx-auto mb-1" />
-                        <p className="text-xs font-bold">AUS</p>
-                        <p className="text-[9px] opacity-60">Wide</p>
-                      </div>
-                    </div>
+                <div className="absolute inset-0 flex items-center justify-center p-8">
+                  <div className="relative w-full max-w-[380px]">
+                    <svg viewBox="0 0 400 340" className="w-full h-auto">
+                      <defs>
+                        <linearGradient id="svcAusGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="oklch(0.55 0.12 176)" stopOpacity="0.15" />
+                          <stop offset="100%" stopColor="oklch(0.45 0.1 192)" stopOpacity="0.25" />
+                        </linearGradient>
+                        <linearGradient id="svcAusStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="oklch(0.55 0.12 176)" stopOpacity="0.5" />
+                          <stop offset="100%" stopColor="oklch(0.45 0.1 192)" stopOpacity="0.3" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d="M130,30 L155,25 L180,30 L195,20 L220,28 L240,35 L265,25 L290,30 L310,22 L330,30 L350,45 L360,65 L365,90 L355,115 L360,140 L370,165 L365,190 L355,210 L340,225 L320,240 L300,250 L280,260 L265,275 L250,285 L235,280 L220,270 L200,275 L185,285 L170,280 L155,270 L140,280 L120,275 L100,265 L85,250 L75,235 L65,215 L60,195 L55,175 L50,155 L55,135 L65,115 L75,100 L85,85 L95,70 L105,55 L115,40 Z"
+                        fill="url(#svcAusGrad)"
+                        stroke="url(#svcAusStroke)"
+                        strokeWidth="1.5"
+                      />
+                    </svg>
 
                     {[
-                      { name: "MEL", top: "10%", left: "60%", delay: 0 },
-                      { name: "SYD", top: "5%", left: "82%", delay: 0.15 },
-                      { name: "BNE", top: "30%", left: "92%", delay: 0.3 },
-                      { name: "PER", top: "45%", left: "5%", delay: 0.45 },
-                      { name: "ADL", top: "55%", left: "45%", delay: 0.6 },
-                      { name: "GC", top: "18%", left: "95%", delay: 0.75 },
-                    ].map((city) => (
+                      { name: "Melbourne", abbr: "MEL", x: "72%", y: "78%", hq: true },
+                      { name: "Sydney", abbr: "SYD", x: "82%", y: "62%", hq: false },
+                      { name: "Brisbane", abbr: "BNE", x: "85%", y: "38%", hq: false },
+                      { name: "Perth", abbr: "PER", x: "15%", y: "62%", hq: false },
+                      { name: "Adelaide", abbr: "ADL", x: "58%", y: "68%", hq: false },
+                      { name: "Gold Coast", abbr: "GC", x: "88%", y: "43%", hq: false },
+                    ].map((city, ci) => (
                       <motion.div
-                        key={city.name}
+                        key={city.abbr}
                         initial={{ opacity: 0, scale: 0 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
-                        transition={{
-                          delay: 0.5 + city.delay,
-                          type: "spring",
-                        }}
+                        transition={{ delay: 0.4 + ci * 0.1, type: "spring", stiffness: 200 }}
                         className="absolute"
-                        style={{ top: city.top, left: city.left }}
+                        style={{ left: city.x, top: city.y, transform: "translate(-50%, -50%)" }}
                       >
-                        <div className="flex items-center gap-1.5 rounded-full bg-card border border-border/50 px-2.5 py-1.5 shadow-md hover:shadow-lg hover:border-primary/30 transition-all cursor-default">
-                          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-                          <span className="text-[10px] font-bold">
-                            {city.name}
-                          </span>
-                        </div>
+                        {city.hq ? (
+                          <div className="relative">
+                            <div className="absolute -inset-3 rounded-full animate-ping opacity-20" style={{ background: "oklch(0.55 0.12 176)" }} />
+                            <div className="flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-3 py-1.5 shadow-lg" style={{ boxShadow: "0 4px 16px oklch(0.55 0.12 176 / 0.35)" }}>
+                              <MapPin className="h-3.5 w-3.5" />
+                              <span className="text-[11px] font-bold">{city.abbr}</span>
+                            </div>
+                            <p className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] font-bold text-primary whitespace-nowrap">HQ</p>
+                          </div>
+                        ) : (
+                          <div className="group/pin cursor-default relative">
+                            <div className="h-3 w-3 rounded-full bg-primary/60 border-2 border-card shadow-md transition-transform duration-200 group-hover/pin:scale-125" />
+                            <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover/pin:opacity-100 transition-opacity pointer-events-none">
+                              <div className="flex items-center gap-1 rounded-full bg-card border border-border/50 px-2.5 py-1 shadow-md whitespace-nowrap">
+                                <span className="text-[10px] font-bold">{city.name}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     ))}
+
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      {[
+                        { x2: 82, y2: 62 },
+                        { x2: 85, y2: 38 },
+                        { x2: 15, y2: 62 },
+                        { x2: 58, y2: 68 },
+                        { x2: 88, y2: 43 },
+                      ].map((line, li) => (
+                        <motion.line
+                          key={li}
+                          x1={72} y1={78}
+                          x2={line.x2} y2={line.y2}
+                          stroke="oklch(0.55 0.12 176 / 0.15)"
+                          strokeWidth="0.3"
+                          strokeDasharray="2 2"
+                          initial={{ pathLength: 0 }}
+                          whileInView={{ pathLength: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.6 + li * 0.15, duration: 0.8 }}
+                        />
+                      ))}
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+                  <div className="flex items-center gap-4 text-[10px] text-muted-foreground">
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-primary" />
+                      HQ (Melbourne)
+                    </span>
+                    <span className="inline-flex items-center gap-1.5">
+                      <span className="h-2 w-2 rounded-full bg-primary/60 border border-card" />
+                      Delivery Points
+                    </span>
                   </div>
                 </div>
               </div>

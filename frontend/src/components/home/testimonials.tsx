@@ -6,39 +6,25 @@ import { Star, Quote, ChevronLeft, ChevronRight, MapPin } from "lucide-react";
 
 const testimonials = [
   {
-    name: "Sarah K.",
-    role: "Convenience Store Owner",
-    location: "Sydney, NSW",
-    rating: 5,
-    text: "AJ Fresh Foods has been our go-to supplier for over a year now. Their beverage range is incredible — the coconut water and basil seed drinks fly off our shelves. Reliable delivery every single time.",
-  },
-  {
-    name: "Raj P.",
-    role: "Supermarket Manager",
+    name: "Ravi M.",
+    role: "Supermarket Owner",
     location: "Melbourne, VIC",
     rating: 5,
-    text: "The Shan Masala range and Indomie noodles are always in demand. AJ Fresh Foods offers the best wholesale pricing we've found, and their customer service is genuinely helpful.",
+    text: "AJ Fresh Foods has been our go-to supplier since day one. The Shan Masala range and Indomie noodles fly off the shelves. Best wholesale pricing we've found and the team is always helpful.",
   },
   {
-    name: "David L.",
+    name: "Sandra T.",
+    role: "Convenience Store Manager",
+    location: "Melbourne, VIC",
+    rating: 5,
+    text: "We switched to AJ Fresh Foods for our dried fruits and rice supply. The quality is consistently excellent and prices are very competitive. Our customers love the Soneri Basmati range.",
+  },
+  {
+    name: "Omar K.",
     role: "Grocery Shop Owner",
-    location: "Brisbane, QLD",
+    location: "Melbourne, VIC",
     rating: 5,
-    text: "We switched to AJ Fresh Foods for our dried fruits and rice supply. The quality is consistently excellent and the pricing is very competitive. Our customers love the Soneri Basmati range.",
-  },
-  {
-    name: "Fatima A.",
-    role: "Mini-Mart Operator",
-    location: "Perth, WA",
-    rating: 5,
-    text: "Excellent product variety across all categories. From charcoal to candies, they have everything we need in one place. The ordering process is simple and deliveries are always on time.",
-  },
-  {
-    name: "James W.",
-    role: "Independent Retailer",
-    location: "Adelaide, SA",
-    rating: 5,
-    text: "Switching suppliers was the best decision we made. AJ Fresh Foods understands what Australian retailers need. Great variety, fair prices, and a team that genuinely cares.",
+    text: "Excellent product variety across all categories — from charcoal to beverages, they have everything we need in one place. Ordering is simple and deliveries are always on time.",
   },
 ];
 

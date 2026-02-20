@@ -18,7 +18,7 @@ export default function ProductsPage() {
             label="Product Catalogue"
             title="Our Complete"
             titleGradient="Range"
-            description="130+ wholesale products across 12 categories. All pricing is per carton. Browse by category to find what your store needs."
+            description="130+ wholesale products across 12 categories. All pricing is per carton and negotiable. Contact us for your best rate."
           />
         </div>
         <ProductCatalog />

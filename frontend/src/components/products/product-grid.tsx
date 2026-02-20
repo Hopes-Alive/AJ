@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   GlassWater, Coffee, Leaf, Cherry, Wheat, Flame, Citrus,
   Soup, ChefHat, Candy, Droplets, Home, Package,
-  Layers, ChevronRight, ChevronDown,
+  Layers, ChevronRight, ChevronDown, X,
 } from "lucide-react";
 import { categories } from "@/data/products";
 import { ProductGroup, Product } from "@/types";
@@ -44,6 +44,7 @@ const categoryHues: Record<string, number> = {
 
 export function ProductCatalog() {
   const [activeCategoryId, setActiveCategoryId] = useState(categories[0].id);
+  const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
   const activeCategory = categories.find((c) => c.id === activeCategoryId)!;
   const activeHue = categoryHues[activeCategoryId] ?? 176;
   const contentRef = useRef<HTMLDivElement>(null);
@@ -148,7 +149,7 @@ export function ProductCatalog() {
             </div>
 
             {/* Mobile: inline category title */}
-            <div className="sm:hidden flex items-center gap-2 mb-3 mt-1">
+            <div className="sm:hidden flex items-center gap-2 mb-2 mt-1">
               {(() => {
                 const Icon = iconMap[activeCategory.icon] || GlassWater;
                 return (
@@ -177,6 +178,22 @@ export function ProductCatalog() {
               </span>
             </div>
 
+            {/* Negotiable pricing notice */}
+            <div
+              className="flex items-center gap-2 rounded-lg px-3 py-2 mb-3 sm:mb-6 text-[11px] sm:text-xs"
+              style={{
+                background: `linear-gradient(135deg, oklch(0.55 0.12 ${activeHue} / 0.06), oklch(0.55 0.12 ${activeHue} / 0.02))`,
+                border: `1px solid oklch(0.55 0.12 ${activeHue} / 0.1)`,
+              }}
+            >
+              <span className="font-semibold" style={{ color: `oklch(0.5 0.12 ${activeHue})` }}>
+                💬 All prices are negotiable
+              </span>
+              <span className="text-muted-foreground">
+                — Contact us for your best wholesale rate
+              </span>
+            </div>
+
             {/* Groups */}
             <div className="space-y-3 sm:space-y-8 mt-0 sm:mt-8">
               {activeCategory.groups.map((group, i) => (
@@ -193,6 +210,7 @@ export function ProductCatalog() {
                       hue={activeHue}
                       index={i}
                       showIndex={activeCategory.groups.length > 1}
+                      onProductClick={setLightboxProduct}
                     />
                   </div>
                   {/* Tablet/Desktop: full group */}
@@ -202,6 +220,7 @@ export function ProductCatalog() {
                       hue={activeHue}
                       index={i}
                       showIndex={activeCategory.groups.length > 1}
+                      onProductClick={setLightboxProduct}
                     />
                   </div>
                 </motion.div>
@@ -211,6 +230,12 @@ export function ProductCatalog() {
         </AnimatePresence>
       </div>
       </div>
+
+      {/* Product Image Lightbox */}
+      <ProductLightbox
+        product={lightboxProduct}
+        onClose={() => setLightboxProduct(null)}
+      />
     </div>
   );
 }
@@ -224,11 +249,13 @@ function MobileGroupSection({
   hue,
   index,
   showIndex,
+  onProductClick,
 }: {
   group: ProductGroup;
   hue: number;
   index: number;
   showIndex: boolean;
+  onProductClick: (product: Product) => void;
 }) {
   const [expanded, setExpanded] = useState(true);
 
@@ -310,6 +337,7 @@ function MobileGroupSection({
                     groupPack={group.defaultPack}
                     groupPrice={group.defaultPrice}
                     hue={hue}
+                    onProductClick={onProductClick}
                   />
                 ))}
               </div>
@@ -330,18 +358,21 @@ function MobileProductCard({
   groupPack,
   groupPrice,
   hue,
+  onProductClick,
 }: {
   product: Product;
   groupPack?: string;
   groupPrice?: string;
   hue: number;
+  onProductClick?: (product: Product) => void;
 }) {
   const pack = product.pack || groupPack;
   const price = product.price || groupPrice;
 
   return (
     <div
-      className="rounded-lg overflow-hidden flex flex-col"
+      onClick={() => product.image && onProductClick?.(product)}
+      className={`rounded-lg overflow-hidden flex flex-col ${product.image ? "cursor-pointer active:scale-[0.97] transition-transform" : ""}`}
       style={{
         background: "var(--card)",
         border: "1px solid oklch(0.5 0 0 / 0.06)",
@@ -354,7 +385,7 @@ function MobileProductCard({
             src={product.image}
             alt={product.name}
             fill
-            className="object-cover"
+            className="object-contain p-1.5"
             sizes="50vw"
           />
         ) : (
@@ -421,6 +452,96 @@ function MobilePlaceholder({
         {initials}
       </span>
     </div>
+  );
+}
+
+/* ═══════════════════════════════════════════════════
+   PRODUCT LIGHTBOX — Full-screen image popup
+   ═══════════════════════════════════════════════════ */
+
+function ProductLightbox({
+  product,
+  onClose,
+}: {
+  product: Product | null;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!product) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [product, onClose]);
+
+  return (
+    <AnimatePresence>
+      {product && product.image && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8"
+          onClick={onClose}
+        >
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-md" />
+
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 sm:top-6 sm:right-6 z-10 h-10 w-10 rounded-full flex items-center justify-center bg-white/10 border border-white/15 text-white/70 hover:bg-white/20 hover:text-white transition-all duration-200"
+          >
+            <X className="h-5 w-5" />
+          </button>
+
+          {/* Image + Info */}
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+            onClick={(e) => e.stopPropagation()}
+            className="relative z-10 flex flex-col items-center max-w-lg w-full sm:max-w-xl md:max-w-2xl"
+          >
+            <div className="relative w-full aspect-square max-h-[70vh] rounded-2xl overflow-hidden bg-white/5 border border-white/10 backdrop-blur-sm">
+              <Image
+                src={product.image}
+                alt={product.name}
+                fill
+                className="object-contain p-4 sm:p-8"
+                sizes="(max-width: 640px) 90vw, (max-width: 1024px) 70vw, 600px"
+                priority
+              />
+            </div>
+
+            <div className="mt-4 text-center">
+              <h3 className="text-lg sm:text-xl font-bold text-white">
+                {product.name}
+              </h3>
+              <div className="flex items-center justify-center gap-3 mt-2">
+                {product.pack && (
+                  <span className="text-xs text-white/50 bg-white/8 border border-white/10 rounded-lg px-3 py-1">
+                    {product.pack}
+                  </span>
+                )}
+                {product.price && (
+                  <span className="text-xs font-bold text-white bg-white/10 border border-white/15 rounded-lg px-3 py-1">
+                    {product.price}
+                  </span>
+                )}
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
@@ -846,11 +967,13 @@ function DesktopGroupSection({
   hue,
   index,
   showIndex,
+  onProductClick,
 }: {
   group: ProductGroup;
   hue: number;
   index: number;
   showIndex: boolean;
+  onProductClick: (product: Product) => void;
 }) {
   return (
     <div
@@ -948,6 +1071,7 @@ function DesktopGroupSection({
               groupPack={group.defaultPack}
               index={i}
               accentHue={hue}
+              onProductClick={onProductClick}
             />
           ))}
         </div>

@@ -6,15 +6,17 @@ import { navLinks } from "@/data/navigation";
 import { Mail, Phone, MapPin, Clock, ArrowUpRight, ArrowRight } from "lucide-react";
 
 const hours = [
-  { day: "Mon – Fri", time: "7 am – 5 pm", open: true },
-  { day: "Saturday", time: "8 am – 12 pm", open: true },
+  { day: "Mon – Fri", time: "7 am – 6 pm", open: true },
+  { day: "Saturday", time: "8 am – 5 pm", open: true },
   { day: "Sunday", time: "Closed", open: false },
 ];
 
 const contactLinks = [
-  { icon: Phone, label: "0450 767 508", href: "tel:0450767508" },
+  { icon: Phone, label: "+61 450 767 508", href: "tel:+61450767508" },
+  { icon: Phone, label: "+61 416 121 649", href: "tel:+61416121649" },
   { icon: Mail, label: "ali@ajfreshfoods.com.au", href: "mailto:ali@ajfreshfoods.com.au" },
-  { icon: MapPin, label: "Australia" },
+  { icon: Mail, label: "admin@ajfreshfoods.com.au", href: "mailto:admin@ajfreshfoods.com.au" },
+  { icon: MapPin, label: "17 Camino Cres, Cranbourne West VIC 3977", href: "https://maps.google.com/?q=17+Camino+Cres+Cranbourne+West+VIC+3977" },
 ];
 
 export function Footer() {
@@ -180,7 +182,7 @@ export function Footer() {
         {/* ── Bottom bar ── */}
         <div className="border-t border-border/40 dark:border-border/25 py-6 flex flex-col items-center justify-between gap-4 sm:flex-row">
           <p className="text-xs text-muted-foreground/50">
-            &copy; {new Date().getFullYear()} AJ Fresh Foods. All rights
+            &copy; {new Date().getFullYear()} AJ Fresh Foods Pty Ltd. All rights
             reserved.
           </p>
           <div className="flex gap-6">

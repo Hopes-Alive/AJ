@@ -13,7 +13,6 @@ import {
   Package,
   ShieldCheck,
   Building2,
-  Globe,
   Star,
 } from "lucide-react";
 import Image from "next/image";
@@ -23,9 +22,10 @@ const contactMethods = [
   {
     icon: Phone,
     title: "Call Us",
-    value: "0450 767 508",
-    href: "tel:0450767508",
-    description: "Mon–Fri 7am–5pm, Sat 8am–12pm",
+    value: "+61 450 767 508",
+    secondaryValue: "+61 416 121 649",
+    href: "tel:+61450767508",
+    description: "Mon–Fri 7am–6pm, Sat 8am–5pm",
     action: "Call now",
     hue: 155,
   },
@@ -33,6 +33,7 @@ const contactMethods = [
     icon: Mail,
     title: "Email Us",
     value: "ali@ajfreshfoods.com.au",
+    secondaryValue: "admin@ajfreshfoods.com.au",
     href: "mailto:ali@ajfreshfoods.com.au",
     description: "We reply within 24 hours",
     action: "Send email",
@@ -41,8 +42,8 @@ const contactMethods = [
   {
     icon: MapPin,
     title: "Visit Us",
-    value: "Cranbourne, Victoria",
-    href: "https://maps.google.com/?q=Cranbourne+Victoria+Australia",
+    value: "17 Camino Cres, Cranbourne West VIC 3977",
+    href: "https://maps.google.com/?q=17+Camino+Cres+Cranbourne+West+VIC+3977",
     description: "Australia",
     action: "Get directions",
     hue: 270,
@@ -50,13 +51,13 @@ const contactMethods = [
 ];
 
 const hours = [
-  { day: "Monday – Friday", time: "7:00 AM – 5:00 PM", active: true },
-  { day: "Saturday", time: "8:00 AM – 12:00 PM", active: true },
+  { day: "Monday – Friday", time: "7:00 AM – 6:00 PM", active: true },
+  { day: "Saturday", time: "8:00 AM – 5:00 PM", active: true },
   { day: "Sunday", time: "Closed", active: false },
 ];
 
 const quickFacts = [
-  { label: "Company", value: "AJ Fresh Foods" },
+  { label: "Company", value: "AJ Fresh Foods Pty Ltd" },
   { label: "Type", value: "Wholesale Grocery Distribution" },
   { label: "Coverage", value: "Australia-wide" },
   { label: "Catalogue", value: "130+ products · 12 categories" },
@@ -65,19 +66,23 @@ const quickFacts = [
 const faqs = [
   {
     q: "What is the minimum order?",
-    a: "We sell by the carton. There's no minimum order quantity — even a single carton is fine to get started.",
+    a: "For deliveries within Victoria, the minimum order is $500. For orders outside Melbourne, the minimum is 1 pallet.",
+  },
+  {
+    q: "Where do you deliver?",
+    a: "We deliver throughout Australia — covering Melbourne, Sydney, Brisbane, Perth, Adelaide, Gold Coast, and regional areas nationwide.",
+  },
+  {
+    q: "Are prices negotiable?",
+    a: "Yes — all our prices are negotiable. We work with you to find the best pricing based on your order volume and requirements.",
   },
   {
     q: "How do I set up an account?",
     a: "Simply call or email us. We'll set up your wholesale account and you can start ordering right away.",
   },
   {
-    q: "What areas do you deliver to?",
-    a: "We deliver across Australia — covering Melbourne, Sydney, Brisbane, Perth, Adelaide, Gold Coast, and regional areas.",
-  },
-  {
     q: "How does pricing work?",
-    a: "All pricing is per carton with transparent GST. We offer competitive wholesale rates designed to help you maximise margins.",
+    a: "All pricing is per carton with transparent GST. Prices shown are starting points — contact us for your tailored wholesale rate.",
   },
 ];
 
@@ -231,6 +236,11 @@ export function ContactContent() {
                   <p className="text-sm sm:text-base font-bold text-white truncate">
                     {method.value}
                   </p>
+                  {"secondaryValue" in method && method.secondaryValue && (
+                    <p className="text-[11px] sm:text-sm font-semibold text-white/70 truncate">
+                      {method.secondaryValue}
+                    </p>
+                  )}
                   <p className="text-[10px] sm:text-xs text-white/35 mt-1">
                     {method.description}
                   </p>
@@ -349,7 +359,7 @@ export function ContactContent() {
               transition={{ duration: 0.6, delay: 0.15 }}
               className="space-y-6"
             >
-              {/* Map-style visual */}
+              {/* Australia Map */}
               <div className="relative rounded-2xl border border-border/50 bg-card/90 backdrop-blur-sm overflow-hidden aspect-[4/3]">
                 <div
                   className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
@@ -361,69 +371,111 @@ export function ContactContent() {
                 />
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-muted/20 dark:from-primary/10 dark:to-muted/10" />
 
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative">
-                    {[70, 115, 160].map((size, idx) => (
-                      <motion.div
-                        key={size}
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-primary/12"
-                        style={{ width: size * 2, height: size * 2 }}
-                        animate={{
-                          scale: [1, 1.06, 1],
-                          opacity: [0.2, 0.5, 0.2],
-                        }}
-                        transition={{
-                          duration: 3.5,
-                          delay: idx * 0.6,
-                          repeat: Infinity,
-                        }}
+                <div className="absolute inset-0 flex items-center justify-center p-6 sm:p-8">
+                  <div className="relative w-full max-w-[360px]">
+                    {/* Simplified Australia SVG */}
+                    <svg viewBox="0 0 400 340" className="w-full h-auto">
+                      <defs>
+                        <linearGradient id="ausGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="oklch(0.55 0.12 176)" stopOpacity="0.15" />
+                          <stop offset="100%" stopColor="oklch(0.45 0.1 192)" stopOpacity="0.25" />
+                        </linearGradient>
+                        <linearGradient id="ausStroke" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <stop offset="0%" stopColor="oklch(0.55 0.12 176)" stopOpacity="0.5" />
+                          <stop offset="100%" stopColor="oklch(0.45 0.1 192)" stopOpacity="0.3" />
+                        </linearGradient>
+                      </defs>
+                      <path
+                        d="M130,30 L155,25 L180,30 L195,20 L220,28 L240,35 L265,25 L290,30 L310,22 L330,30 L350,45 L360,65 L365,90 L355,115 L360,140 L370,165 L365,190 L355,210 L340,225 L320,240 L300,250 L280,260 L265,275 L250,285 L235,280 L220,270 L200,275 L185,285 L170,280 L155,270 L140,280 L120,275 L100,265 L85,250 L75,235 L65,215 L60,195 L55,175 L50,155 L55,135 L65,115 L75,100 L85,85 L95,70 L105,55 L115,40 Z"
+                        fill="url(#ausGrad)"
+                        stroke="url(#ausStroke)"
+                        strokeWidth="1.5"
                       />
-                    ))}
+                    </svg>
 
-                    <div className="relative flex h-24 w-24 sm:h-28 sm:w-28 items-center justify-center rounded-full bg-gradient-to-br from-primary to-teal-600 shadow-2xl"
-                      style={{
-                        boxShadow:
-                          "0 8px 32px oklch(0.55 0.12 176 / 0.3), 0 0 60px oklch(0.55 0.12 176 / 0.1)",
-                      }}
-                    >
-                      <div className="text-center text-primary-foreground">
-                        <Globe className="h-6 w-6 sm:h-7 sm:w-7 mx-auto mb-1" />
-                        <p className="text-xs font-bold">Australia</p>
-                        <p className="text-[9px] opacity-60">Wide</p>
-                      </div>
-                    </div>
-
+                    {/* City pinpoints */}
                     {[
-                      { label: "MEL", x: "130%", y: "-20%" },
-                      { label: "SYD", x: "120%", y: "60%" },
-                      { label: "BNE", x: "50%", y: "-70%" },
-                      { label: "PER", x: "-100%", y: "30%" },
+                      { name: "Melbourne", abbr: "MEL", x: "72%", y: "78%", hq: true },
+                      { name: "Sydney", abbr: "SYD", x: "82%", y: "62%", hq: false },
+                      { name: "Brisbane", abbr: "BNE", x: "85%", y: "38%", hq: false },
+                      { name: "Perth", abbr: "PER", x: "15%", y: "62%", hq: false },
+                      { name: "Adelaide", abbr: "ADL", x: "58%", y: "68%", hq: false },
+                      { name: "Gold Coast", abbr: "GC", x: "88%", y: "43%", hq: false },
                     ].map((city, ci) => (
                       <motion.div
-                        key={city.label}
+                        key={city.abbr}
                         initial={{ opacity: 0, scale: 0 }}
                         whileInView={{ opacity: 1, scale: 1 }}
                         viewport={{ once: true }}
                         transition={{
-                          delay: 0.5 + ci * 0.12,
+                          delay: 0.4 + ci * 0.1,
                           type: "spring",
+                          stiffness: 200,
                         }}
                         className="absolute"
-                        style={{
-                          top: "50%",
-                          left: "50%",
-                          transform: `translate(${city.x}, ${city.y})`,
-                        }}
+                        style={{ left: city.x, top: city.y, transform: "translate(-50%, -50%)" }}
                       >
-                        <div className="flex items-center gap-1.5 rounded-full bg-card border border-border/50 px-2.5 py-1 shadow-md">
-                          <div className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                          <span className="text-[10px] font-bold">
-                            {city.label}
-                          </span>
-                        </div>
+                        {city.hq ? (
+                          <div className="relative">
+                            <div className="absolute -inset-3 rounded-full animate-ping opacity-20" style={{ background: "oklch(0.55 0.12 176)" }} />
+                            <div className="absolute -inset-2 rounded-full opacity-30" style={{ background: "radial-gradient(circle, oklch(0.55 0.12 176 / 0.3), transparent)" }} />
+                            <div className="relative flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-2.5 py-1 shadow-lg" style={{ boxShadow: "0 4px 16px oklch(0.55 0.12 176 / 0.35)" }}>
+                              <MapPin className="h-3 w-3" />
+                              <span className="text-[10px] font-bold">{city.abbr}</span>
+                            </div>
+                            <p className="absolute -bottom-4 left-1/2 -translate-x-1/2 text-[8px] font-bold text-primary whitespace-nowrap">HQ</p>
+                          </div>
+                        ) : (
+                          <div className="relative group/pin">
+                            <div className="h-2.5 w-2.5 rounded-full bg-primary/70 border-2 border-card shadow-md" />
+                            <div className="absolute bottom-full mb-1 left-1/2 -translate-x-1/2 opacity-0 group-hover/pin:opacity-100 transition-opacity pointer-events-none">
+                              <div className="flex items-center gap-1 rounded-full bg-card border border-border/50 px-2 py-0.5 shadow-md whitespace-nowrap">
+                                <span className="text-[9px] font-bold">{city.name}</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </motion.div>
                     ))}
+
+                    {/* Delivery route lines from MEL to other cities */}
+                    <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
+                      {[
+                        { x2: 82, y2: 62 },
+                        { x2: 85, y2: 38 },
+                        { x2: 15, y2: 62 },
+                        { x2: 58, y2: 68 },
+                      ].map((line, li) => (
+                        <motion.line
+                          key={li}
+                          x1={72} y1={78}
+                          x2={line.x2} y2={line.y2}
+                          stroke="oklch(0.55 0.12 176 / 0.15)"
+                          strokeWidth="0.3"
+                          strokeDasharray="2 2"
+                          initial={{ pathLength: 0 }}
+                          whileInView={{ pathLength: 1 }}
+                          viewport={{ once: true }}
+                          transition={{ delay: 0.6 + li * 0.15, duration: 0.8 }}
+                        />
+                      ))}
+                    </svg>
                   </div>
+                </div>
+
+                {/* Legend */}
+                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                  <div className="flex items-center gap-3 text-[9px] text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <div className="h-2 w-2 rounded-full bg-primary" />
+                      <span>Headquarters</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="h-1.5 w-1.5 rounded-full bg-primary/60 border border-card" />
+                      <span>Delivery Area</span>
+                    </div>
+                  </div>
+                  <span className="text-[9px] font-semibold text-primary/60">Delivering Australia-Wide</span>
                 </div>
               </div>
 
@@ -432,7 +484,7 @@ export function ContactContent() {
                 {[
                   { icon: Truck, label: "Australia-wide", sub: "Delivery" },
                   { icon: Package, label: "130+", sub: "Products" },
-                  { icon: ShieldCheck, label: "No minimum", sub: "Order" },
+                  { icon: ShieldCheck, label: "Negotiable", sub: "Pricing" },
                 ].map((item, i) => (
                   <motion.div
                     key={item.label}
@@ -547,10 +599,10 @@ export function ContactContent() {
                 <ArrowRight className="h-4 w-4" />
               </a>
               <a
-                href="tel:0450767508"
+                href="tel:+61450767508"
                 className="inline-flex h-12 w-full sm:w-auto items-center justify-center rounded-xl border border-white/20 text-white font-semibold px-8 hover:bg-white/10 transition-all duration-300"
               >
-                Call 0450 767 508
+                Call +61 450 767 508
               </a>
             </div>
           </motion.div>

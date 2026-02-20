@@ -295,16 +295,16 @@ export function Header() {
                 />
 
                 <a
-                  href="tel:0450767508"
+                  href="tel:+61450767508"
                   className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-muted/25 mb-2 transition-colors hover:bg-muted/40"
                 >
                   <div className="h-8 w-8 rounded-lg bg-emerald-500/10 flex items-center justify-center">
                     <Phone className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold">0450 767 508</p>
+                    <p className="text-sm font-semibold">+61 450 767 508</p>
                     <p className="text-[10px] text-muted-foreground">
-                      Mon–Fri 7am–5pm
+                      Mon–Fri 7am–6pm
                     </p>
                   </div>
                 </a>

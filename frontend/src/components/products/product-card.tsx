@@ -11,6 +11,7 @@ interface ProductCardProps {
   groupPrice?: string;
   index: number;
   accentHue?: number;
+  onProductClick?: (product: Product) => void;
 }
 
 export function ProductCard({
@@ -19,6 +20,7 @@ export function ProductCard({
   groupPrice,
   index,
   accentHue = 176,
+  onProductClick,
 }: ProductCardProps) {
   const pack = product.pack || groupPack;
   const price = product.price || groupPrice;
@@ -28,7 +30,8 @@ export function ProductCard({
       initial={{ opacity: 0, y: 14, scale: 0.97 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ delay: index * 0.03, duration: 0.4, ease: "easeOut" }}
-      className="group/card relative flex flex-col rounded-2xl overflow-hidden"
+      onClick={() => product.image && onProductClick?.(product)}
+      className={`group/card relative flex flex-col rounded-2xl overflow-hidden ${product.image ? "cursor-pointer" : ""}`}
       style={{
         background: "var(--card)",
         border: "1px solid var(--border)",
@@ -58,7 +61,7 @@ export function ProductCard({
               src={product.image}
               alt={product.name}
               fill
-              className="object-cover transition-all duration-600 group-hover/card:scale-108"
+              className="object-contain p-2 transition-all duration-600 group-hover/card:scale-108"
               sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
             />
           ) : (

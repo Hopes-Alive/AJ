@@ -12,14 +12,12 @@ import {
   Users,
   Truck,
   MapPin,
-  Linkedin,
-  Mail,
   ArrowRight,
 } from "lucide-react";
 import { milestones } from "@/data/products";
 import Image from "next/image";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef } from "react";
 
 const values = [
   {
@@ -81,18 +79,20 @@ const stats = [
 
 const founders = [
   {
-    name: "Hussain Ali",
-    role: "Co-Founder & Managing Director",
-    bio: "Hussain brings a sharp business acumen and deep understanding of the Australian retail landscape to AJ Fresh Foods. His vision of making quality international grocery products accessible to every retailer drives the company's growth and strategic direction.",
+    name: "Hussien Jafari",
+    role: "Co-Founder & Sales Director",
+    bio: "Hussien is the driving force behind AJ Fresh Foods' client relationships and sales operations. He works closely with retailers across Australia, ensuring they get the right products at the right prices. His hands-on approach to selling and supplying has built lasting partnerships with stores nationwide.",
     location: "Cranbourne, Victoria",
-    initials: "HA",
+    initials: "HJ",
+    image: "/images/founder-hussien.png",
   },
   {
-    name: "Ali",
-    role: "Co-Founder & Operations Director",
-    bio: "With expertise in supply chain management and logistics, Ali ensures every product reaches retailers efficiently and on time. His commitment to operational excellence is the backbone of AJ Fresh Foods' reliable distribution network across Australia.",
+    name: "Ali Akbari",
+    role: "Co-Founder & Procurement Director",
+    bio: "Ali leads the importing and procurement side of AJ Fresh Foods. With a keen eye for quality and strong relationships with international suppliers, he ensures the best products make it to Australian shelves. His expertise in sourcing and stock management keeps the catalogue diverse and competitively priced.",
     location: "Cranbourne, Victoria",
-    initials: "A",
+    initials: "AA",
+    image: "/images/founder-ali.png",
   },
 ];
 
@@ -302,42 +302,24 @@ export function AboutContent() {
               transition={{ duration: 0.7 }}
               className="relative"
             >
-              <div className="grid grid-cols-2 gap-2 sm:gap-4">
-                <div className="space-y-4">
-                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-border/50 shadow-lg">
-                    <Image
-                      src="/images/categories/beverages.jpg"
-                      alt="Beverages range"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="relative aspect-square rounded-2xl overflow-hidden border border-border/50 shadow-lg">
-                    <Image
-                      src="/images/categories/shan-masala.jpg"
-                      alt="Spices collection"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-4 pt-8">
-                  <div className="relative aspect-square rounded-2xl overflow-hidden border border-border/50 shadow-lg">
-                    <Image
-                      src="/images/categories/rice.jpg"
-                      alt="Rice range"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="relative aspect-[3/4] rounded-2xl overflow-hidden border border-border/50 shadow-lg">
-                    <Image
-                      src="/images/categories/noodles.jpg"
-                      alt="Noodles range"
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
+              <div className="relative rounded-2xl overflow-hidden border border-border/50 shadow-xl group">
+                <div className="relative aspect-[3/4]">
+                  <Image
+                    src="/images/founder-warehouse.png"
+                    alt="Founder at AJ Fresh Foods warehouse with product stock"
+                    fill
+                    className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.03]"
+                    sizes="(max-width: 1024px) 100vw, 50vw"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/10" />
+
+                  {/* Decorative frame glow */}
+                  <div
+                    className="absolute -inset-px rounded-2xl pointer-events-none"
+                    style={{
+                      background: "linear-gradient(135deg, oklch(0.55 0.12 176 / 0.2), transparent 40%, oklch(0.55 0.12 176 / 0.1))",
+                    }}
+                  />
                 </div>
               </div>
               <motion.div
@@ -347,8 +329,8 @@ export function AboutContent() {
                 transition={{ type: "spring", delay: 0.5 }}
                 className="absolute -bottom-4 -right-4 sm:bottom-4 sm:right-4 z-10 bg-primary text-primary-foreground rounded-2xl p-5 shadow-xl glow-sm"
               >
-                <p className="text-2xl sm:text-3xl font-bold">12+</p>
-                <p className="text-xs opacity-80">Years of Trust</p>
+                <p className="text-2xl sm:text-3xl font-bold">2023</p>
+                <p className="text-xs opacity-80">Est. Year</p>
               </motion.div>
             </motion.div>
 
@@ -367,10 +349,10 @@ export function AboutContent() {
               </h2>
               <div className="mt-6 space-y-4 text-muted-foreground leading-relaxed">
                 <p>
-                  AJ Fresh Foods was born from a simple idea — Australian
+                  Founded in 2023, AJ Fresh Foods was born from a simple idea — Australian
                   retailers deserve a wholesale partner that prioritises quality,
                   transparency, and competitive pricing. What started as a small
-                  operation has grown into a trusted distribution network
+                  operation has quickly grown into a trusted distribution network
                   spanning the nation.
                 </p>
                 <p>
@@ -413,31 +395,133 @@ export function AboutContent() {
       </section>
 
       {/* Founders / Leadership */}
-      <section className="relative py-14 sm:py-20 lg:py-28 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-mesh opacity-30" />
+      <section className="relative py-20 sm:py-28 lg:py-36 overflow-hidden">
+        <div
+          className="absolute inset-0"
+          style={{
+            background: "linear-gradient(180deg, var(--background) 0%, oklch(0.16 0.04 182) 30%, oklch(0.13 0.035 188) 100%)",
+          }}
+        />
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: "radial-gradient(circle at 1px 1px, oklch(0.7 0.1 176) 1px, transparent 0)",
+            backgroundSize: "48px 48px",
+          }}
+        />
+        <div
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] rounded-full blur-[150px] opacity-15 pointer-events-none"
+          style={{ background: "oklch(0.4 0.12 178)" }}
+        />
+
         <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
-            className="text-center mb-10 sm:mb-16"
+            className="text-center mb-16 sm:mb-20 lg:mb-24"
           >
-            <p className="text-sm font-semibold uppercase tracking-widest text-primary mb-3">
+            <p className="text-xs sm:text-sm font-semibold uppercase tracking-[0.2em] mb-4" style={{ color: "oklch(0.65 0.12 176)" }}>
               Leadership
             </p>
-            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight">
-              Meet the <span className="text-gradient">Team</span>
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white leading-[1.1]">
+              Meet the{" "}
+              <span style={{ background: "linear-gradient(135deg, oklch(0.75 0.15 170), oklch(0.58 0.13 195))", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
+                Founders
+              </span>
             </h2>
-            <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-              The people behind AJ Fresh Foods — building a distribution network
-              that Australian retailers can rely on.
+            <p className="mt-5 text-white/40 max-w-lg mx-auto text-sm sm:text-base">
+              Two partners, one mission — bringing the world&apos;s best grocery products to Australian retailers.
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          {/* Founders — large full-width rows */}
+          <div className="space-y-8 sm:space-y-10">
             {founders.map((founder, i) => (
-              <FounderCard key={founder.name} founder={founder} index={i} />
+              <motion.div
+                key={founder.name}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-60px" }}
+                transition={{ delay: i * 0.12, duration: 0.7 }}
+                className="group relative rounded-2xl sm:rounded-3xl overflow-hidden"
+                style={{
+                  background: "linear-gradient(135deg, oklch(0.2 0.025 185 / 0.8), oklch(0.17 0.02 192 / 0.8))",
+                  border: "1px solid oklch(1 0 0 / 0.06)",
+                  boxShadow: "0 8px 40px oklch(0 0 0 / 0.25)",
+                  backdropFilter: "blur(20px)",
+                }}
+              >
+                <div className={`flex flex-col ${i % 2 === 0 ? "md:flex-row" : "md:flex-row-reverse"} items-stretch`}>
+                  {/* Photo side — big */}
+                  <div className="relative flex-shrink-0 md:w-[45%] lg:w-[40%] flex items-end justify-center overflow-hidden">
+                    {/* Ambient glow */}
+                    <div
+                      className="absolute bottom-0 left-1/2 -translate-x-1/2 w-60 h-60 sm:w-80 sm:h-80 rounded-full blur-[80px] opacity-30"
+                      style={{ background: `oklch(0.45 0.12 ${i === 0 ? 176 : 195})` }}
+                    />
+                    {/* Subtle light streak */}
+                    <div
+                      className="absolute inset-0 opacity-10"
+                      style={{
+                        background: `linear-gradient(${i === 0 ? 135 : 225}deg, oklch(0.6 0.12 176 / 0.3), transparent 50%)`,
+                      }}
+                    />
+                    <div className="relative w-full max-w-[280px] sm:max-w-[320px] lg:max-w-[360px] aspect-[3/4] transition-transform duration-600 group-hover:scale-[1.03]">
+                      <Image
+                        src={founder.image}
+                        alt={founder.name}
+                        fill
+                        className="object-contain object-bottom"
+                        sizes="(max-width: 768px) 80vw, 360px"
+                        style={{ filter: "drop-shadow(0 16px 40px oklch(0 0 0 / 0.5))" }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Text side */}
+                  <div className="flex-1 flex flex-col justify-center px-6 sm:px-10 lg:px-14 py-8 sm:py-10 lg:py-14">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div
+                        className="h-2 w-8 rounded-full"
+                        style={{ background: "linear-gradient(90deg, oklch(0.6 0.13 176), oklch(0.5 0.1 195))" }}
+                      />
+                      <span
+                        className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em]"
+                        style={{ color: "oklch(0.6 0.12 176)" }}
+                      >
+                        Co-Founder
+                      </span>
+                    </div>
+
+                    <h3 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight leading-[1.1]">
+                      {founder.name}
+                    </h3>
+
+                    <p
+                      className="text-sm sm:text-base font-semibold mt-2"
+                      style={{ color: "oklch(0.6 0.12 176)" }}
+                    >
+                      {founder.role}
+                    </p>
+
+                    <p className="text-sm sm:text-[15px] lg:text-base text-white/50 leading-relaxed mt-5 sm:mt-6 max-w-lg">
+                      {founder.bio}
+                    </p>
+
+                    <div className="flex items-center gap-2 mt-6 sm:mt-8">
+                      <div
+                        className="h-8 w-8 rounded-lg flex items-center justify-center"
+                        style={{ background: "oklch(1 0 0 / 0.06)", border: "1px solid oklch(1 0 0 / 0.08)" }}
+                      >
+                        <MapPin className="h-3.5 w-3.5 text-white/40" />
+                      </div>
+                      <span className="text-xs sm:text-sm text-white/35">{founder.location}</span>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
             ))}
           </div>
 
@@ -445,18 +529,20 @@ export function AboutContent() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            transition={{ delay: 0.4 }}
-            className="mt-12 text-center"
+            transition={{ delay: 0.3 }}
+            className="mt-14 sm:mt-20 text-center"
           >
-            <p className="text-sm text-muted-foreground">
-              Interested in joining our team?{" "}
-              <a
-                href="/contact"
-                className="text-primary font-medium hover:underline underline-offset-4"
-              >
-                Get in touch
-              </a>
-            </p>
+            <a
+              href="/contact"
+              className="inline-flex items-center gap-2 rounded-full px-7 py-3 text-sm font-semibold text-white transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
+              style={{
+                background: "linear-gradient(135deg, oklch(0.45 0.12 176), oklch(0.38 0.1 192))",
+                boxShadow: "0 4px 20px oklch(0.45 0.12 176 / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.1)",
+              }}
+            >
+              Interested in joining our team?
+              <ArrowRight className="h-4 w-4" />
+            </a>
           </motion.div>
         </div>
       </section>
@@ -592,106 +678,6 @@ export function AboutContent() {
         </div>
       </section>
     </>
-  );
-}
-
-function FounderCard({
-  founder,
-  index,
-}: {
-  founder: (typeof founders)[number];
-  index: number;
-}) {
-  const [imgError, setImgError] = useState(true);
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 30 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.15, duration: 0.6 }}
-      className="group relative"
-    >
-      <div className="relative rounded-3xl border border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden transition-all duration-500 hover:border-primary/30 hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-1">
-        {/* Large photo area */}
-        <div className="relative h-72 sm:h-80 overflow-hidden bg-gradient-to-br from-primary/8 via-primary/3 to-muted/30 dark:from-primary/15 dark:via-primary/8 dark:to-muted/20">
-          {imgError ? (
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div
-                className="absolute inset-0 opacity-[0.03] dark:opacity-[0.06]"
-                style={{
-                  backgroundImage:
-                    "radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0)",
-                  backgroundSize: "24px 24px",
-                }}
-              />
-              <div className="relative">
-                <div className="h-28 w-28 rounded-full bg-gradient-to-br from-primary/25 to-primary/10 border-2 border-primary/20 flex items-center justify-center shadow-xl transition-all duration-500 group-hover:scale-105 group-hover:border-primary/40 group-hover:glow-sm">
-                  <span className="text-4xl font-bold text-primary">
-                    {founder.initials}
-                  </span>
-                </div>
-                <div className="absolute -bottom-1 right-0 h-7 w-7 rounded-full bg-emerald-500 border-3 border-card flex items-center justify-center shadow-md">
-                  <div className="h-2.5 w-2.5 rounded-full bg-white" />
-                </div>
-              </div>
-              <p className="mt-4 text-xs text-muted-foreground/60 uppercase tracking-widest">
-                Photo Coming Soon
-              </p>
-            </div>
-          ) : (
-            <>
-              <Image
-                src={`/images/team/${founder.name
-                  .toLowerCase()
-                  .replace(/\s+/g, "-")}.jpg`}
-                alt={founder.name}
-                fill
-                className="object-cover object-top transition-transform duration-700 group-hover:scale-105"
-                onError={() => setImgError(true)}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
-              <div className="absolute bottom-3 right-3 h-7 w-7 rounded-full bg-emerald-500 border-3 border-white/30 flex items-center justify-center shadow-md">
-                <div className="h-2.5 w-2.5 rounded-full bg-white" />
-              </div>
-            </>
-          )}
-        </div>
-
-        {/* Info area */}
-        <div className="relative px-4 sm:px-7 py-5 sm:py-6">
-          <div className="absolute -top-5 left-4 sm:left-7 inline-flex items-center gap-1.5 rounded-full bg-primary px-4 py-1.5 shadow-lg glow-xs">
-            <span className="text-xs font-semibold text-primary-foreground">
-              {founder.role.split("&")[0].trim()}
-            </span>
-          </div>
-
-          <div className="pt-3">
-            <h3 className="text-xl sm:text-2xl font-bold">{founder.name}</h3>
-            <p className="text-sm text-primary font-medium mt-0.5">
-              {founder.role}
-            </p>
-            <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
-              <MapPin className="h-3.5 w-3.5" />
-              {founder.location}
-            </div>
-          </div>
-
-          <p className="mt-4 text-sm text-muted-foreground leading-relaxed">
-            {founder.bio}
-          </p>
-
-          <div className="mt-5 pt-5 border-t border-border/50 flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-muted/80 flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer">
-              <Linkedin className="h-4 w-4" />
-            </div>
-            <div className="h-9 w-9 rounded-xl bg-muted/80 flex items-center justify-center hover:bg-primary/10 hover:text-primary transition-colors cursor-pointer">
-              <Mail className="h-4 w-4" />
-            </div>
-          </div>
-        </div>
-      </div>
-    </motion.div>
   );
 }
 
