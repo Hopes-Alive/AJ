@@ -45,19 +45,19 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 w-full pointer-events-none">
-      <div className="mx-auto max-w-7xl px-0 sm:px-5 lg:px-8 pt-0 sm:pt-4">
+      <div className="mx-auto max-w-7xl px-2.5 sm:px-5 lg:px-8 pt-2.5 sm:pt-4">
         <nav
           className={cn(
             "pointer-events-auto relative transition-all duration-500 ease-out",
-            "rounded-none sm:rounded-2xl",
+            "rounded-2xl",
             scrolled
-              ? "bg-background/95 dark:bg-background/90 sm:bg-background/85 sm:dark:bg-background/75 backdrop-blur-2xl shadow-lg shadow-black/[0.06] dark:shadow-black/[0.2] border-b sm:border border-border/50 dark:border-border/30"
-              : "bg-background/90 dark:bg-background/70 sm:bg-background/65 sm:dark:bg-background/45 backdrop-blur-xl border-b sm:border border-border/30 dark:border-border/20"
+              ? "bg-background/95 dark:bg-background/90 sm:bg-background/85 sm:dark:bg-background/75 backdrop-blur-2xl shadow-lg shadow-black/[0.06] dark:shadow-black/[0.2] border border-border/50 dark:border-border/30"
+              : "bg-background/90 dark:bg-background/70 sm:bg-background/65 sm:dark:bg-background/45 backdrop-blur-xl border border-border/30 dark:border-border/20"
           )}
         >
           {/* Top accent */}
           <div
-            className="absolute inset-x-4 top-0 h-[2px] rounded-full overflow-hidden hidden sm:block"
+            className="absolute inset-x-4 top-0 h-[2px] rounded-full overflow-hidden"
             style={{
               background:
                 "linear-gradient(90deg, transparent, oklch(0.55 0.12 176 / 0.5), oklch(0.5 0.1 195 / 0.3), transparent)",
@@ -217,7 +217,7 @@ export function Header() {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -8, scale: 0.98 }}
               transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-              className="pointer-events-auto fixed left-2 right-2 sm:left-5 sm:right-5 top-[57px] sm:top-[80px] z-50 rounded-2xl overflow-hidden lg:hidden"
+              className="pointer-events-auto fixed left-2.5 right-2.5 sm:left-5 sm:right-5 top-[66px] sm:top-[80px] z-50 rounded-2xl overflow-hidden lg:hidden"
               style={{
                 background: "var(--card)",
                 border: "1px solid var(--border)",

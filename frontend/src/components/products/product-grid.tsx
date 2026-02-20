@@ -72,7 +72,7 @@ export function ProductCatalog() {
   return (
     <div>
       {/* ── Horizontal Category Strip (Mobile + Tablet) — outside flex row ── */}
-      <div className="lg:hidden sticky top-[57px] sm:top-[80px] z-30 -mx-4 sm:-mx-6">
+      <div className="lg:hidden sticky top-[66px] sm:top-[80px] z-30 -mx-4 sm:-mx-6">
         <div className="bg-background/95 dark:bg-background/90 backdrop-blur-xl border-b border-border/50">
           <div
             ref={pillsRef}
