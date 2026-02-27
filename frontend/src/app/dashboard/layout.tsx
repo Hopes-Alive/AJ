@@ -21,8 +21,8 @@ export default async function DashboardLayout({
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* 80px = floating site header height on lg+ */}
-      <aside className="hidden lg:block shrink-0">
+      {/* 80px = floating site header height (pt-4 16px + h-16 64px) on lg+ */}
+      <aside className="hidden lg:flex flex-col shrink-0">
         <div className="sticky top-[80px] h-[calc(100vh-80px)]">
           <Sidebar />
         </div>

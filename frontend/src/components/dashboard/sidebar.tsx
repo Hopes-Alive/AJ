@@ -4,20 +4,17 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import {
-  LayoutDashboard, ShoppingCart, ClipboardList,
-  Search, LogOut, X,
-} from "lucide-react";
+import { LayoutDashboard, ShoppingCart, ClipboardList, Search, LogOut, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard, exact: true },
-  { href: "/dashboard/new-order", label: "New Order", icon: ShoppingCart },
-  { href: "/dashboard/orders", label: "Orders", icon: ClipboardList },
-  { href: "/dashboard/lookup", label: "Lookup", icon: Search },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard, exact: true, color: "oklch(0.52 0.13 172)", glow: "oklch(0.52 0.13 172 / 0.25)" },
+  { href: "/dashboard/new-order", label: "New Order", icon: ShoppingCart, color: "oklch(0.52 0.13 172)", glow: "oklch(0.52 0.13 172 / 0.25)" },
+  { href: "/dashboard/orders", label: "My Orders", icon: ClipboardList, color: "oklch(0.55 0.18 250)", glow: "oklch(0.55 0.18 250 / 0.25)" },
+  { href: "/dashboard/lookup", label: "Order Lookup", icon: Search, color: "oklch(0.52 0.2 300)", glow: "oklch(0.52 0.2 300 / 0.25)" },
 ];
 
-interface SidebarProps { onClose?: () => void }
+interface SidebarProps { onClose?: () => void; }
 
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
@@ -31,63 +28,69 @@ export function Sidebar({ onClose }: SidebarProps) {
   }
 
   return (
-    <div className="flex flex-col h-full w-60 bg-background border-r border-border/60">
+    <div className="flex flex-col h-full w-64 overflow-hidden"
+      style={{
+        background: "linear-gradient(180deg, oklch(0.98 0.005 172) 0%, oklch(0.97 0.003 172) 100%)",
+        borderRight: "1px solid rgba(0,0,0,0.07)",
+        boxShadow: "2px 0 20px rgba(0,0,0,0.05)",
+      }}>
 
-      {/* Brand */}
-      <div className="flex items-center justify-between h-[60px] px-5 border-b border-border/60">
-        <Link href="/" className="flex items-center gap-2.5">
-          <div className="relative w-7 h-7 rounded-md overflow-hidden shrink-0">
-            <Image src="/images/logo.png" alt="" fill className="object-contain" />
+      {/* Brand header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-black/[0.06]"
+        style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172 / 0.06), oklch(0.44 0.11 192 / 0.03))" }}>
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="relative w-9 h-9 rounded-xl overflow-hidden border border-border/50 shrink-0"
+            style={{ boxShadow: "0 2px 8px oklch(0.52 0.13 172 / 0.2), inset 0 1px 0 rgba(255,255,255,0.5)" }}>
+            <Image src="/images/logo.png" alt="AJ Fresh Foods" fill className="object-contain p-1" />
           </div>
-          <span className="font-semibold text-[13px] text-foreground tracking-tight">AJ Fresh Foods</span>
+          <div>
+            <p className="font-black text-foreground text-sm leading-none">AJ Fresh Foods</p>
+            <p className="text-[10px] text-muted-foreground/70 mt-0.5 font-medium tracking-wide">Admin Portal</p>
+          </div>
         </Link>
         {onClose && (
-          <button onClick={onClose} className="lg:hidden p-1 rounded-md text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={onClose} className="lg:hidden p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors">
             <X className="h-4 w-4" />
           </button>
         )}
       </div>
 
       {/* Nav */}
-      <nav className="flex-1 py-4 px-2 space-y-0.5">
-        {navItems.map(({ href, label, icon: Icon, exact }) => {
+      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <p className="text-[9px] font-black text-muted-foreground/40 uppercase tracking-[0.2em] px-3 pb-2">Menu</p>
+        {navItems.map(({ href, label, icon: Icon, exact, color, glow }) => {
           const isActive = exact ? pathname === href : pathname.startsWith(href);
           return (
-            <Link
-              key={href}
-              href={href}
-              onClick={onClose}
+            <Link key={href} href={href} onClick={onClose}
               className={cn(
-                "group relative flex items-center gap-2.5 px-3 py-2 rounded-lg text-[13px] font-medium transition-colors duration-150",
-                isActive
-                  ? "bg-primary/8 text-foreground"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200",
+                isActive ? "text-white" : "text-muted-foreground hover:text-foreground hover:bg-black/[0.04]"
               )}
+              style={isActive ? {
+                background: `linear-gradient(135deg, ${color}, ${color.replace(")", " / 0.8)")})`,
+                boxShadow: `0 4px 16px ${glow}, inset 0 1px 0 rgba(255,255,255,0.2)`,
+              } : {}}
             >
-              {/* Active indicator */}
-              {isActive && (
-                <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-full bg-primary" />
-              )}
-              <Icon className={cn("h-[15px] w-[15px] shrink-0", isActive ? "text-primary" : "text-muted-foreground/70 group-hover:text-foreground")} />
+              <div className={cn(
+                "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-all",
+                isActive ? "bg-white/20" : "bg-transparent"
+              )}>
+                <Icon className="h-4 w-4" />
+              </div>
               {label}
             </Link>
           );
         })}
       </nav>
 
-      {/* Footer */}
-      <div className="px-2 pb-4 border-t border-border/60 pt-3">
-        <div className="px-3 py-2 mb-1 flex items-center gap-2">
-          <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-            <span className="text-primary text-[10px] font-bold">A</span>
-          </div>
-          <span className="text-[11px] text-muted-foreground truncate">Admin</span>
-        </div>
-        <button
-          onClick={handleSignOut}
-          className="flex items-center gap-2.5 w-full px-3 py-2 rounded-lg text-[13px] font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors duration-150"
+      {/* Sign out */}
+      <div className="px-3 py-4 border-t border-black/[0.06]">
+        <button onClick={handleSignOut}
+          className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-sm font-semibold text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/15 transition-all duration-200 group"
         >
-          <LogOut className="h-[15px] w-[15px] shrink-0" />
+          <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center group-hover:bg-red-100 dark:group-hover:bg-red-900/20 transition-colors">
+            <LogOut className="h-4 w-4" />
+          </div>
           Sign out
         </button>
       </div>

@@ -31,24 +31,30 @@ function cartKey(groupId: string, name: string) {
 
 /* ─────────────────────── sub-components ───────────────── */
 
-function ProductImage({ src, alt }: { src?: string; alt: string }) {
-  const [err, setErr] = useState(false);
-  if (!src || err) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-muted/40">
-        <Package className="h-8 w-8 text-muted-foreground/30" />
-      </div>
-    );
-  }
+function ImageZoomModal({ src, alt, onClose }: { src: string; alt: string; onClose: () => void }) {
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
   return (
-    <Image
-      src={src}
-      alt={alt}
-      fill
-      className="object-contain p-2"
-      onError={() => setErr(true)}
-      sizes="(max-width: 640px) 50vw, 160px"
-    />
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-6"
+      style={{ background: "rgba(0,0,0,0.85)", backdropFilter: "blur(12px)" }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-sm aspect-square rounded-3xl overflow-hidden shadow-2xl"
+        style={{ boxShadow: "0 32px 80px rgba(0,0,0,0.6)" }}
+        onClick={e => e.stopPropagation()}
+      >
+        <Image src={src} alt={alt} fill className="object-contain p-6 bg-white" sizes="400px" />
+      </div>
+      <button
+        onClick={onClose}
+        className="absolute top-5 right-5 w-10 h-10 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-colors text-xl"
+      >✕</button>
+    </div>
   );
 }
 
@@ -66,79 +72,153 @@ function ProductCard({
   onQtyChange: (delta: number) => void;
   onSetQty: (qty: number) => void;
 }) {
+  const [imgError, setImgError] = useState(false);
+  const [zoomed, setZoomed] = useState(false);
   const pack = product.pack ?? defaultPack ?? "—";
   const price = product.price ?? defaultPrice ?? "Contact";
+  const hasImage = !!product.image && !imgError;
 
   return (
-    <div className={cn(
-      "relative flex flex-col rounded-2xl border bg-card overflow-hidden transition-all duration-200 group/card",
-      cartItem
-        ? "border-primary/50 shadow-md shadow-primary/10 bg-primary/[0.02]"
-        : "border-border hover:border-primary/30 hover:shadow-md hover:shadow-primary/5"
-    )}>
-      {/* Image */}
-      <div className="relative w-full aspect-square bg-muted/20">
-        <ProductImage src={product.image} alt={product.name} />
-        {cartItem && (
-          <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md">
-            {cartItem.quantity}
-          </div>
+    <>
+      {zoomed && hasImage && (
+        <ImageZoomModal src={product.image!} alt={product.name} onClose={() => setZoomed(false)} />
+      )}
+      <div
+        className={cn(
+          "relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 cursor-default",
+          "border bg-card",
+          cartItem
+            ? "border-primary/60 bg-gradient-to-b from-primary/5 to-card"
+            : "border-border/80 hover:border-primary/40",
         )}
-      </div>
+        style={cartItem ? {
+          boxShadow: "0 4px 24px oklch(0.52 0.13 172 / 0.18), 0 1px 4px oklch(0.52 0.13 172 / 0.1)",
+        } : {
+          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+        }}
+        onMouseEnter={e => {
+          (e.currentTarget as HTMLDivElement).style.transform = "perspective(800px) translateY(-4px) rotateX(2deg)";
+          (e.currentTarget as HTMLDivElement).style.boxShadow = cartItem
+            ? "0 12px 40px oklch(0.52 0.13 172 / 0.28), 0 2px 8px oklch(0.52 0.13 172 / 0.12)"
+            : "0 12px 32px rgba(0,0,0,0.12), 0 2px 8px rgba(0,0,0,0.06)";
+        }}
+        onMouseLeave={e => {
+          (e.currentTarget as HTMLDivElement).style.transform = "";
+          (e.currentTarget as HTMLDivElement).style.boxShadow = cartItem
+            ? "0 4px 24px oklch(0.52 0.13 172 / 0.18), 0 1px 4px oklch(0.52 0.13 172 / 0.1)"
+            : "0 2px 8px rgba(0,0,0,0.06)";
+        }}
+      >
+        {/* Image area */}
+        <div
+          className={cn(
+            "relative w-full aspect-square overflow-hidden",
+            hasImage ? "bg-white cursor-zoom-in group/img" : "bg-muted/30"
+          )}
+          onClick={() => hasImage && setZoomed(true)}
+        >
+          {hasImage ? (
+            <>
+              <Image
+                src={product.image!}
+                alt={product.name}
+                fill
+                className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-110"
+                onError={() => setImgError(true)}
+                sizes="(max-width: 640px) 50vw, 180px"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-300 flex items-center justify-center">
+                <div className="opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                  <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Package className="h-10 w-10 text-muted-foreground/20" />
+            </div>
+          )}
 
-      {/* Info */}
-      <div className="flex flex-col flex-1 p-3">
-        <p className="font-semibold text-foreground text-sm leading-tight line-clamp-2 flex-1">
-          {product.name}
-        </p>
-        <p className="text-xs text-muted-foreground mt-1">{pack}</p>
-        <p className="text-sm font-bold text-primary mt-1">{price}</p>
+          {/* In-cart badge */}
+          {cartItem && (
+            <div
+              className="absolute top-2 right-2 min-w-[24px] h-6 px-1.5 rounded-full text-xs font-black flex items-center justify-center text-white"
+              style={{
+                background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
+                boxShadow: "0 2px 8px oklch(0.52 0.13 172 / 0.5)",
+              }}
+            >
+              {cartItem.quantity}
+            </div>
+          )}
+        </div>
 
-        {/* Action */}
-        <div className="mt-3">
+        {/* Info */}
+        <div className="flex flex-col flex-1 p-3 pt-2.5">
+          <p className="font-bold text-foreground text-xs leading-snug line-clamp-2 flex-1 mb-1">
+            {product.name}
+          </p>
+          <p className="text-[10px] text-muted-foreground/70">{pack}</p>
+          <div className="flex items-center justify-between mt-1.5 mb-2.5">
+            <p
+              className="text-sm font-black"
+              style={{
+                background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+              }}
+            >{price}</p>
+          </div>
+
+          {/* Quantity control */}
           {cartItem ? (
-            <div className="flex items-center justify-between bg-primary/10 rounded-xl px-1.5 py-1.5 border border-primary/20">
-              <button
-                type="button"
-                onClick={() => onQtyChange(-1)}
-                className="w-7 h-7 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-muted hover:border-primary/30 transition-colors"
-              >
+            <div
+              className="flex items-center justify-between rounded-xl px-1.5 py-1.5 border"
+              style={{
+                background: "oklch(0.52 0.13 172 / 0.08)",
+                borderColor: "oklch(0.52 0.13 172 / 0.25)",
+              }}
+            >
+              <button type="button" onClick={() => onQtyChange(-1)}
+                className="w-7 h-7 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-all">
                 <Minus className="h-3 w-3" />
               </button>
-              {/* Direct editable number input */}
               <input
-                type="number"
-                min={1}
-                max={999}
+                type="number" min={1} max={999}
                 value={cartItem.quantity}
-                onChange={e => {
-                  const v = parseInt(e.target.value);
-                  if (!isNaN(v) && v >= 1) onSetQty(v);
-                }}
+                onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 1) onSetQty(v); }}
                 onFocus={e => e.target.select()}
-                className="font-bold text-foreground text-sm w-10 text-center bg-transparent focus:outline-none focus:ring-1 focus:ring-primary/40 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="font-black text-foreground text-sm w-10 text-center bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               />
-              <button
-                type="button"
-                onClick={() => onQtyChange(1)}
-                className="w-7 h-7 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors"
-              >
+              <button type="button" onClick={() => onQtyChange(1)}
+                className="w-7 h-7 rounded-xl text-white flex items-center justify-center hover:opacity-90 transition-opacity"
+                style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }}>
                 <Plus className="h-3 w-3" />
               </button>
             </div>
           ) : (
-            <button
-              type="button"
-              onClick={onAdd}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/8 hover:bg-primary text-primary hover:text-primary-foreground text-sm font-semibold transition-all duration-200 border border-primary/20 hover:border-primary"
+            <button type="button" onClick={onAdd}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-primary text-xs font-bold transition-all duration-200 border border-primary/25 hover:text-white"
+              style={{ background: "oklch(0.52 0.13 172 / 0.07)" }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px oklch(0.52 0.13 172 / 0.35)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "oklch(0.52 0.13 172 / 0.07)";
+                (e.currentTarget as HTMLButtonElement).style.borderColor = "";
+                (e.currentTarget as HTMLButtonElement).style.boxShadow = "";
+              }}
             >
-              <Plus className="h-3.5 w-3.5" />
-              Add
+              <Plus className="h-3.5 w-3.5" /> Add
             </button>
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
