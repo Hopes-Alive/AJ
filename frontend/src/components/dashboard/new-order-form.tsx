@@ -243,6 +243,8 @@ export function NewOrderForm() {
   const tabBarRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
+  const suppressScrollspy = useRef(false);
+  const suppressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   /* filtered categories */
   const displayCategories = useMemo(() => {
@@ -264,7 +266,8 @@ export function NewOrderForm() {
   /* scrollspy — listen to window scroll, highlight active tab */
   useEffect(() => {
     function onScroll() {
-      // floating header + combined search+tabs sticky block (~108px) + buffer
+      // Skip scrollspy while a tab-click scroll is in progress
+      if (suppressScrollspy.current) return;
       const OFFSET = window.innerWidth >= 1024 ? 210 : 260;
       let current = displayCategories[0]?.id ?? "";
       for (const cat of displayCategories) {
@@ -279,7 +282,14 @@ export function NewOrderForm() {
 
   /* click tab → scroll section into view below sticky block */
   function scrollToCategory(catId: string) {
+    // Immediately lock the active tab and suppress scrollspy until scroll settles
     setActiveCat(catId);
+    suppressScrollspy.current = true;
+    if (suppressTimer.current) clearTimeout(suppressTimer.current);
+    suppressTimer.current = setTimeout(() => {
+      suppressScrollspy.current = false;
+    }, 900);
+
     const el = sectionRefs.current[catId];
     if (el) {
       const OFFSET = window.innerWidth >= 1024 ? 210 : 260;
