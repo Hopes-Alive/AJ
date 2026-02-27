@@ -756,8 +756,8 @@ export function NewOrderForm() {
 
                     {/* Product cards grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
-                      {group.products.map(product => {
-                        const key = cartKey(group.id, product.name);
+                      {group.products.map((product, pIdx) => {
+                        const key = `${cartKey(group.id, product.name)}-${pIdx}`;
                         return (
                           <ProductCard
                             key={key}

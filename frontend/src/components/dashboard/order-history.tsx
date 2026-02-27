@@ -277,111 +277,175 @@ export function OrderHistory() {
 
               {/* Expanded panel */}
               {isExpanded && (
-                <div className="bg-card">
-                  {/* Status editor */}
-                  <div className="mx-4 mb-0 mt-0 rounded-2xl border border-border overflow-hidden"
-                    style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
-                    <div className="px-5 py-3.5 flex items-center justify-between gap-4 flex-wrap"
-                      style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01))" }}>
+                <div
+                  className="border-t border-border/60"
+                  style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.02) 0%, transparent 100%)" }}
+                >
+                  {/* Top action bar */}
+                  <div className="flex items-center justify-between gap-4 px-5 py-4 flex-wrap border-b border-border/40"
+                    style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.02), transparent)" }}>
+                    <div className="flex items-center gap-3">
+                      <div className="h-6 w-[3px] rounded-full" style={{ background: cfg.color ?? "#888" }} />
                       <div>
-                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Update Status</p>
-                        <StatusSelector orderId={order.id} current={order.status} onUpdated={handleUpdated} />
+                        <p className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-[0.18em]">Update Status</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Change this order&apos;s payment status</p>
                       </div>
-                      <button onClick={() => setSelectedOrder(order)}
-                        className="flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline">
-                        <ExternalLink className="h-3.5 w-3.5" /> Full details
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <StatusSelector orderId={order.id} current={order.status} onUpdated={handleUpdated} />
+                      <button
+                        onClick={() => setSelectedOrder(order)}
+                        className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold text-primary border border-primary/25 bg-primary/5 hover:bg-primary/10 transition-colors"
+                      >
+                        <ExternalLink className="h-3 w-3" /> Full view
                       </button>
                     </div>
                   </div>
 
-                  {/* Info grid */}
-                  <div className="grid sm:grid-cols-3 gap-3 px-4 py-4">
+                  {/* Info strip: 3 detail tiles */}
+                  <div className="grid sm:grid-cols-3 gap-3 px-4 pt-4">
                     {/* Delivery */}
-                    <div className="rounded-2xl border border-border p-4"
-                      style={{ background: "rgba(0,0,0,0.015)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                    <div
+                      className="rounded-2xl p-4 border border-border/60 relative overflow-hidden"
+                      style={{ background: "rgba(16,185,129,0.04)", boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-10"
+                        style={{ background: "radial-gradient(circle, #10b981, transparent 70%)", transform: "translate(30%, -30%)" }} />
                       <div className="flex items-center gap-1.5 mb-2">
-                        <MapPin className="h-3.5 w-3.5 text-primary" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Delivery</p>
+                        <div className="w-6 h-6 rounded-lg bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
+                          <MapPin className="h-3 w-3 text-emerald-600 dark:text-emerald-400" />
+                        </div>
+                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground/60">Delivery To</p>
                       </div>
-                      <p className="text-sm text-foreground font-medium leading-snug">{order.delivery_address}</p>
+                      <p className="text-sm text-foreground font-semibold leading-snug">{order.delivery_address}</p>
                     </div>
 
-                    {/* Date + cartons */}
-                    <div className="rounded-2xl border border-border p-4"
-                      style={{ background: "rgba(0,0,0,0.015)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                    {/* Placed */}
+                    <div
+                      className="rounded-2xl p-4 border border-border/60 relative overflow-hidden"
+                      style={{ background: "rgba(59,130,246,0.04)", boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-10"
+                        style={{ background: "radial-gradient(circle, #3b82f6, transparent 70%)", transform: "translate(30%, -30%)" }} />
                       <div className="flex items-center gap-1.5 mb-2">
-                        <Calendar className="h-3.5 w-3.5 text-blue-500" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Placed</p>
+                        <div className="w-6 h-6 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                          <Calendar className="h-3 w-3 text-blue-600 dark:text-blue-400" />
+                        </div>
+                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground/60">Placed</p>
                       </div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {melbDateTime(order.created_at)}
+                      <p className="text-sm font-semibold text-foreground leading-snug">{melbDateTime(order.created_at)}</p>
+                      <p className="text-xs text-muted-foreground mt-1.5 font-medium">
+                        {totalCartons} carton{totalCartons !== 1 ? "s" : ""} &middot; {order.items.length} product{order.items.length !== 1 ? "s" : ""}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">{totalCartons} carton{totalCartons !== 1 ? "s" : ""}</p>
                     </div>
 
                     {/* Notes */}
-                    <div className="rounded-2xl border border-border p-4"
-                      style={{ background: "rgba(0,0,0,0.015)", boxShadow: "0 1px 4px rgba(0,0,0,0.04)" }}>
+                    <div
+                      className="rounded-2xl p-4 border border-border/60 relative overflow-hidden"
+                      style={{ background: "rgba(139,92,246,0.04)", boxShadow: "0 1px 6px rgba(0,0,0,0.04)" }}
+                    >
+                      <div className="absolute top-0 right-0 w-16 h-16 rounded-full opacity-10"
+                        style={{ background: "radial-gradient(circle, #8b5cf6, transparent 70%)", transform: "translate(30%, -30%)" }} />
                       <div className="flex items-center gap-1.5 mb-2">
-                        <FileText className="h-3.5 w-3.5 text-purple-500" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Notes</p>
+                        <div className="w-6 h-6 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+                          <FileText className="h-3 w-3 text-purple-600 dark:text-purple-400" />
+                        </div>
+                        <p className="text-[9px] font-black uppercase tracking-[0.18em] text-muted-foreground/60">Notes</p>
                       </div>
-                      <p className="text-sm text-foreground font-medium">{order.notes || <span className="text-muted-foreground/50 italic">No notes</span>}</p>
+                      {order.notes
+                        ? <p className="text-sm text-foreground font-medium leading-snug">{order.notes}</p>
+                        : <p className="text-sm text-muted-foreground/40 italic">No notes added</p>}
                     </div>
                   </div>
 
                   {/* Product table */}
-                  <div className="px-4 pb-5">
-                    <div className="rounded-2xl border border-border overflow-hidden"
-                      style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
-                      <div className="px-4 py-3 border-b border-border flex items-center gap-2"
-                        style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.025), rgba(0,0,0,0.01))" }}>
-                        <Package className="h-3.5 w-3.5 text-muted-foreground" />
-                        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                          Order Items · {order.items.length} product{order.items.length !== 1 ? "s" : ""}
-                        </p>
+                  <div className="px-4 pt-4 pb-5">
+                    <div className="rounded-2xl border border-border/70 overflow-hidden"
+                      style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.06)" }}>
+                      {/* Table header */}
+                      <div
+                        className="px-5 py-3 flex items-center justify-between border-b border-border/60"
+                        style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.03), rgba(0,0,0,0.015))" }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center">
+                            <Package className="h-3 w-3 text-muted-foreground" />
+                          </div>
+                          <p className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground">
+                            Order Items · <span className="text-foreground">{order.items.length}</span> product{order.items.length !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+                        <p className="text-[10px] font-semibold text-muted-foreground">{totalCartons} cartons total</p>
                       </div>
-                      <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b border-border bg-muted/20">
-                            <th className="text-left px-4 py-2.5 text-xs text-muted-foreground font-semibold">Product</th>
-                            <th className="text-center px-3 py-2.5 text-xs text-muted-foreground font-semibold">Qty</th>
-                            <th className="text-center px-3 py-2.5 text-xs text-muted-foreground font-semibold">Price</th>
-                            <th className="text-right px-4 py-2.5 text-xs text-muted-foreground font-semibold">Total</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-border/60">
-                          {order.items.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-muted/20 transition-colors">
-                              <td className="px-4 py-3">
-                                <p className="font-semibold text-foreground text-sm">{item.productName}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{item.groupName} · {item.pack}</p>
-                              </td>
-                              <td className="px-3 py-3 text-center">
-                                <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-muted text-foreground text-xs font-bold">
-                                  {item.quantity}
-                                </span>
-                              </td>
-                              <td className="px-3 py-3 text-center text-sm text-muted-foreground font-medium">
-                                ${(item.customPrice ?? 0).toFixed(2)}
-                              </td>
-                              <td className="px-4 py-3 text-right">
-                                <span className="font-bold text-foreground">${item.lineTotal.toFixed(2)}</span>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                        <tfoot>
-                          <tr className="border-t-2 border-border">
-                            <td colSpan={3} className="px-4 py-3 text-right text-sm font-semibold text-muted-foreground">
-                              Subtotal
-                            </td>
-                            <td className="px-4 py-3 text-right">
-                              <span className="text-lg font-black text-foreground">${order.subtotal.toFixed(2)}</span>
-                            </td>
-                          </tr>
-                        </tfoot>
-                      </table>
+
+                      <div className="divide-y divide-border/40">
+                        {order.items.map((item, idx) => (
+                          <div
+                            key={idx}
+                            className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/20 transition-colors group"
+                          >
+                            {/* Index bubble */}
+                            <span className="w-6 h-6 rounded-lg text-[10px] font-black text-muted-foreground/40 bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-muted">
+                              {idx + 1}
+                            </span>
+
+                            {/* Name + meta */}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-foreground truncate">{item.productName}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">{item.groupName} · {item.pack}</p>
+                            </div>
+
+                            {/* Qty badge */}
+                            <div className="flex flex-col items-center gap-0.5 shrink-0">
+                              <span
+                                className="inline-flex items-center justify-center min-w-[2rem] h-7 px-2 rounded-xl text-xs font-black"
+                                style={{
+                                  background: "oklch(0.52 0.13 172 / 0.12)",
+                                  color: "oklch(0.44 0.11 172)",
+                                  border: "1px solid oklch(0.52 0.13 172 / 0.2)",
+                                }}
+                              >
+                                ×{item.quantity}
+                              </span>
+                              <span className="text-[9px] text-muted-foreground/50 font-medium">qty</span>
+                            </div>
+
+                            {/* Price per unit */}
+                            <div className="flex flex-col items-end shrink-0 min-w-[60px]">
+                              <span className="text-xs text-muted-foreground font-medium">${(item.customPrice ?? 0).toFixed(2)}</span>
+                              <span className="text-[9px] text-muted-foreground/40">per unit</span>
+                            </div>
+
+                            {/* Line total */}
+                            <div className="flex flex-col items-end shrink-0 min-w-[70px]">
+                              <span className="text-sm font-black text-foreground">${item.lineTotal.toFixed(2)}</span>
+                              <span className="text-[9px] text-muted-foreground/40">subtotal</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Subtotal footer */}
+                      <div
+                        className="flex items-center justify-between px-5 py-4 border-t-2 border-border/60"
+                        style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.025), rgba(0,0,0,0.01))" }}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-xs font-semibold text-muted-foreground">{totalCartons} carton{totalCartons !== 1 ? "s" : ""}</span>
+                          <span className="text-muted-foreground/30">·</span>
+                          <span className="text-xs font-semibold text-muted-foreground">{order.items.length} product{order.items.length !== 1 ? "s" : ""}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-semibold text-muted-foreground">Order Total</span>
+                          <span
+                            className="text-xl font-black"
+                            style={{
+                              background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
+                              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+                            }}
+                          >${order.subtotal.toFixed(2)}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
