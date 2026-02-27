@@ -106,9 +106,11 @@ export function OrderLookup() {
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium">Date</p>
                 <p className="text-sm font-semibold text-foreground mt-0.5">
-                  {new Date(result.created_at).toLocaleDateString("en-AU", {
+                  {new Date(result.created_at).toLocaleString("en-AU", {
+                    timeZone: "Australia/Melbourne",
                     day: "numeric", month: "short", year: "numeric",
-                  })}
+                    hour: "2-digit", minute: "2-digit", hour12: true,
+                  })} AEDT
                 </p>
               </div>
             </div>

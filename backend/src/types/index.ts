@@ -37,6 +37,7 @@ export interface CreateOrderPayload {
   subtotal: number;
   notes?: string;
   delivery_address: string;
+  status?: "payment_pending" | "paid";
 }
 
 export interface UpdateOrderStatusPayload {

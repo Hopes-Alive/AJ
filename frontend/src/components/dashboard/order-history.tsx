@@ -11,6 +11,21 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+function melbDate(iso: string) {
+  return new Date(iso).toLocaleDateString("en-AU", {
+    timeZone: "Australia/Melbourne",
+    day: "numeric", month: "short", year: "numeric",
+  });
+}
+
+function melbDateTime(iso: string) {
+  return new Date(iso).toLocaleString("en-AU", {
+    timeZone: "Australia/Melbourne",
+    day: "numeric", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: true,
+  }) + " AEDT";
+}
+
 function StatusSelector({
   orderId, current, onUpdated,
 }: {
@@ -46,7 +61,7 @@ function StatusSelector({
         className="text-sm border border-border rounded-xl px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all cursor-pointer font-medium"
         style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.06)" }}
       >
-        {ALL_STATUSES.map(([value, cfg]) => (
+        {ALL_STATUSES.filter(([v]) => ["payment_pending", "paid", "cancelled"].includes(v)).map(([value, cfg]) => (
           <option key={value} value={value}>{cfg.label}</option>
         ))}
       </select>
@@ -242,7 +257,7 @@ export function OrderHistory() {
                   <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground flex-wrap">
                     <span className="font-mono font-semibold text-foreground/60">{order.order_number}</span>
                     <span className="opacity-30">·</span>
-                    <span>{new Date(order.created_at).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })}</span>
+                    <span>{melbDate(order.created_at)}</span>
                     <span className="opacity-30">·</span>
                     <span>{totalCartons} carton{totalCartons !== 1 ? "s" : ""}</span>
                     <span className="opacity-30">·</span>
@@ -299,7 +314,7 @@ export function OrderHistory() {
                         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Placed</p>
                       </div>
                       <p className="text-sm font-semibold text-foreground">
-                        {new Date(order.created_at).toLocaleDateString("en-AU", { day: "numeric", month: "long", year: "numeric" })}
+                        {melbDateTime(order.created_at)}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">{totalCartons} carton{totalCartons !== 1 ? "s" : ""}</p>
                     </div>

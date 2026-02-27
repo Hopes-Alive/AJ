@@ -233,9 +233,10 @@ export function NewOrderForm() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [paymentStatus, setPaymentStatus] = useState<"payment_pending" | "paid">("payment_pending");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [submitted, setSubmitted] = useState<{ orderNumber: string; orderName: string } | null>(null);
+  const [submitted, setSubmitted] = useState<{ orderNumber: string; orderName: string; placedAt: string } | null>(null);
   const [showCartMobile, setShowCartMobile] = useState(false);
 
   /* refs */
@@ -369,8 +370,14 @@ export function NewOrderForm() {
         subtotal,
         notes: notes.trim() || undefined,
         delivery_address: deliveryAddress.trim(),
+        status: paymentStatus,
       });
-      setSubmitted({ orderNumber: order.order_number, orderName: order.order_name });
+      const placedAt = new Date(order.created_at).toLocaleString("en-AU", {
+        timeZone: "Australia/Melbourne",
+        day: "numeric", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit", hour12: true,
+      });
+      setSubmitted({ orderNumber: order.order_number, orderName: order.order_name, placedAt });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to place order");
     } finally {
@@ -381,16 +388,45 @@ export function NewOrderForm() {
   /* ── success screen ── */
   if (submitted) {
     return (
-      <div className="max-w-sm mx-auto mt-20 text-center px-4">
-        <div className="w-20 h-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
-          <CheckCircle2 className="h-10 w-10 text-green-600 dark:text-green-400" />
+      <div className="max-w-sm mx-auto mt-16 text-center px-4">
+        <div
+          className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.6 0.15 160 / 0.15), oklch(0.55 0.14 170 / 0.1))",
+            boxShadow: "0 8px 32px oklch(0.6 0.15 160 / 0.2)",
+          }}
+        >
+          <CheckCircle2 className="h-10 w-10 text-emerald-500" />
         </div>
-        <h2 className="text-2xl font-bold mb-1">Order created!</h2>
-        <p className="text-muted-foreground mb-3">{submitted.orderName}</p>
-        <p className="text-3xl font-black text-primary font-mono tracking-tight">{submitted.orderNumber}</p>
+        <h2 className="text-2xl font-black text-foreground mb-1">Order placed!</h2>
+        <p className="text-muted-foreground text-sm mb-4">{submitted.orderName}</p>
+        <p
+          className="text-3xl font-black font-mono tracking-tight mb-4"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
+            WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+          }}
+        >{submitted.orderNumber}</p>
+        <div className="rounded-2xl border border-border p-4 text-left space-y-2 mb-6"
+          style={{ background: "rgba(0,0,0,0.02)", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Placed at</span>
+            <span className="font-semibold text-foreground">{submitted.placedAt} AEDT</span>
+          </div>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-muted-foreground">Payment</span>
+            <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${paymentStatus === "paid" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+              {paymentStatus === "paid" ? "Paid" : "Payment Pending"}
+            </span>
+          </div>
+        </div>
         <button
           onClick={() => router.push("/dashboard/orders")}
-          className="mt-8 w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-colors"
+          className="w-full py-3 rounded-xl text-white font-semibold transition-all hover:scale-[1.01]"
+          style={{
+            background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
+            boxShadow: "0 4px 16px oklch(0.52 0.13 172 / 0.3)",
+          }}
         >
           View all orders
         </button>
@@ -439,6 +475,55 @@ export function NewOrderForm() {
             rows={1}
             className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm resize-none"
           />
+        </div>
+
+        {/* Payment status radio */}
+        <div>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Payment Status</p>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { value: "payment_pending", label: "Unpaid", sub: "Payment pending", color: "amber" },
+              { value: "paid", label: "Paid", sub: "Already paid", color: "emerald" },
+            ] as const).map(({ value, label, sub, color }) => (
+              <label
+                key={value}
+                className={cn(
+                  "flex flex-col gap-0.5 p-3 rounded-xl border-2 cursor-pointer transition-all",
+                  paymentStatus === value
+                    ? color === "amber"
+                      ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20"
+                      : "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                    : "border-border bg-background hover:border-border/80"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={cn(
+                    "text-sm font-bold",
+                    paymentStatus === value
+                      ? color === "amber" ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"
+                      : "text-foreground"
+                  )}>{label}</span>
+                  <div className={cn(
+                    "w-4 h-4 rounded-full border-2 flex items-center justify-center",
+                    paymentStatus === value
+                      ? color === "amber" ? "border-amber-500 bg-amber-500" : "border-emerald-500 bg-emerald-500"
+                      : "border-muted-foreground/30"
+                  )}>
+                    {paymentStatus === value && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                </div>
+                <span className="text-[10px] text-muted-foreground">{sub}</span>
+                <input
+                  type="radio"
+                  name="paymentStatus"
+                  value={value}
+                  checked={paymentStatus === value}
+                  onChange={() => setPaymentStatus(value)}
+                  className="sr-only"
+                />
+              </label>
+            ))}
+          </div>
         </div>
       </div>
 

@@ -49,6 +49,7 @@ export interface CreateOrderPayload {
   subtotal: number;
   notes?: string;
   delivery_address: string;
+  status?: "payment_pending" | "paid";
 }
 
 export async function getOrders(): Promise<Order[]> {

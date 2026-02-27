@@ -107,13 +107,18 @@ router.post("/", async (req: AuthenticatedRequest, res: Response) => {
 
   const order_number = await generateOrderNumber();
 
+  const allowedInitialStatuses = ["payment_pending", "paid"];
+  const initialStatus = allowedInitialStatuses.includes(payload.status ?? "")
+    ? payload.status
+    : "payment_pending";
+
   const { data, error } = await supabaseAdmin
     .from("orders")
     .insert({
       order_number,
       order_name: payload.order_name.trim(),
       user_id: req.userId!,
-      status: "pending",
+      status: initialStatus,
       items: payload.items,
       subtotal: payload.subtotal,
       notes: payload.notes ?? null,
