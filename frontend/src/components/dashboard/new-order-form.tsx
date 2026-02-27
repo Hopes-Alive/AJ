@@ -54,7 +54,7 @@ function ProductImage({ src, alt }: { src?: string; alt: string }) {
 
 function ProductCard({
   groupId, groupName, product, defaultPack, defaultPrice, cartItem,
-  onAdd, onQtyChange,
+  onAdd, onQtyChange, onSetQty,
 }: {
   groupId: string;
   groupName: string;
@@ -64,21 +64,21 @@ function ProductCard({
   cartItem?: CartItem;
   onAdd: () => void;
   onQtyChange: (delta: number) => void;
+  onSetQty: (qty: number) => void;
 }) {
   const pack = product.pack ?? defaultPack ?? "—";
   const price = product.price ?? defaultPrice ?? "Contact";
 
   return (
     <div className={cn(
-      "relative flex flex-col rounded-2xl border bg-card overflow-hidden transition-all duration-200",
+      "relative flex flex-col rounded-2xl border bg-card overflow-hidden transition-all duration-200 group/card",
       cartItem
-        ? "border-primary/40 shadow-md shadow-primary/10"
-        : "border-border hover:border-border/60 hover:shadow-sm"
+        ? "border-primary/50 shadow-md shadow-primary/10 bg-primary/[0.02]"
+        : "border-border hover:border-primary/30 hover:shadow-md hover:shadow-primary/5"
     )}>
       {/* Image */}
       <div className="relative w-full aspect-square bg-muted/20">
         <ProductImage src={product.image} alt={product.name} />
-        {/* Cart badge */}
         {cartItem && (
           <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center shadow-md">
             {cartItem.quantity}
@@ -97,17 +97,27 @@ function ProductCard({
         {/* Action */}
         <div className="mt-3">
           {cartItem ? (
-            <div className="flex items-center justify-between bg-primary/10 rounded-xl px-2 py-1.5">
+            <div className="flex items-center justify-between bg-primary/10 rounded-xl px-1.5 py-1.5 border border-primary/20">
               <button
                 type="button"
                 onClick={() => onQtyChange(-1)}
-                className="w-7 h-7 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-muted transition-colors"
+                className="w-7 h-7 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-muted hover:border-primary/30 transition-colors"
               >
                 <Minus className="h-3 w-3" />
               </button>
-              <span className="font-bold text-foreground text-sm w-6 text-center">
-                {cartItem.quantity}
-              </span>
+              {/* Direct editable number input */}
+              <input
+                type="number"
+                min={1}
+                max={999}
+                value={cartItem.quantity}
+                onChange={e => {
+                  const v = parseInt(e.target.value);
+                  if (!isNaN(v) && v >= 1) onSetQty(v);
+                }}
+                onFocus={e => e.target.select()}
+                className="font-bold text-foreground text-sm w-10 text-center bg-transparent focus:outline-none focus:ring-1 focus:ring-primary/40 rounded-md [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
               <button
                 type="button"
                 onClick={() => onQtyChange(1)}
@@ -120,7 +130,7 @@ function ProductCard({
             <button
               type="button"
               onClick={onAdd}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-sm font-semibold transition-colors border border-primary/20 hover:border-primary/40"
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl bg-primary/8 hover:bg-primary text-primary hover:text-primary-foreground text-sm font-semibold transition-all duration-200 border border-primary/20 hover:border-primary"
             >
               <Plus className="h-3.5 w-3.5" />
               Add
@@ -173,35 +183,28 @@ export function NewOrderForm() {
   /* scrollspy — listen to window scroll, highlight active tab */
   useEffect(() => {
     function onScroll() {
-      // account for floating header (82px on desktop) + tab bar (~44px) + buffer
-      const TAB_OFFSET = window.innerWidth >= 1024 ? 160 : 200;
+      // floating header + combined search+tabs sticky block (~108px) + buffer
+      const OFFSET = window.innerWidth >= 1024 ? 210 : 260;
       let current = displayCategories[0]?.id ?? "";
       for (const cat of displayCategories) {
         const el = sectionRefs.current[cat.id];
-        if (el) {
-          const top = el.getBoundingClientRect().top;
-          if (top - TAB_OFFSET <= 0) current = cat.id;
-        }
+        if (el && el.getBoundingClientRect().top - OFFSET <= 0) current = cat.id;
       }
       setActiveCat(current);
     }
-
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, [displayCategories]);
 
-  /* click tab → scroll section into view below sticky header+tabs */
+  /* click tab → scroll section into view below sticky block */
   function scrollToCategory(catId: string) {
     setActiveCat(catId);
     const el = sectionRefs.current[catId];
     if (el) {
-      // floating header + tab bar + breathing room
-      const TOP_OFFSET = window.innerWidth >= 1024 ? 160 : 200;
-      const y = el.getBoundingClientRect().top + window.scrollY - TOP_OFFSET;
+      const OFFSET = window.innerWidth >= 1024 ? 210 : 260;
+      const y = el.getBoundingClientRect().top + window.scrollY - OFFSET;
       window.scrollTo({ top: y, behavior: "smooth" });
     }
-    // block: "nearest" prevents this from triggering a vertical page scroll
-    // (the tab bar is sticky so it's already visible — only scroll it horizontally)
     const tab = tabBarRef.current?.querySelector(`[data-tab="${catId}"]`) as HTMLElement;
     tab?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
   }
@@ -238,6 +241,15 @@ export function NewOrderForm() {
         const q = i.quantity + delta;
         return q <= 0 ? null : { ...i, quantity: q, lineTotal: q * i.customPrice };
       }).filter(Boolean) as CartItem[]
+    );
+  }
+
+  function setQuantityDirect(key: string, qty: number) {
+    setCart(prev =>
+      prev.map(i => i.cartKey === key
+        ? { ...i, quantity: qty, lineTotal: qty * i.customPrice }
+        : i
+      )
     );
   }
 
@@ -507,40 +519,45 @@ export function NewOrderForm() {
         {/* ── Left: Product browser ── */}
         <div className="flex-1 flex flex-col min-w-0">
 
-          {/* Search bar */}
-          <div className="relative mb-3">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <input
-              type="text"
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search products…"
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
-            />
-          </div>
-
-          {/* Category tabs — sticky below floating site header (pt + nav height) + optional mobile dashboard header */}
+          {/* Sticky block: search bar + category tabs */}
           <div
-            ref={tabBarRef}
-            className="sticky top-[122px] sm:top-[136px] lg:top-[82px] z-20 bg-background/95 backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 flex gap-2 overflow-x-auto py-2 mb-1 border-b border-border/50 scrollbar-none"
-            style={{ scrollbarWidth: "none" }}
+            className="sticky top-[122px] sm:top-[136px] lg:top-[82px] z-20 bg-background/95 backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-3 pb-2 border-b border-border/50"
           >
-            {displayCategories.map(cat => (
-              <button
-                key={cat.id}
-                type="button"
-                data-tab={cat.id}
-                onClick={() => scrollToCategory(cat.id)}
-                className={cn(
-                  "shrink-0 px-4 py-2 rounded-full text-sm font-semibold transition-all whitespace-nowrap border",
-                  activeCat === cat.id
-                    ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
-                    : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-primary/40"
-                )}
-              >
-                {cat.name}
-              </button>
-            ))}
+            {/* Search */}
+            <div className="relative mb-2.5">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search products…"
+                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all text-sm"
+              />
+            </div>
+
+            {/* Category tabs */}
+            <div
+              ref={tabBarRef}
+              className="flex gap-1.5 overflow-x-auto scrollbar-none pb-0.5"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {displayCategories.map(cat => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  data-tab={cat.id}
+                  onClick={() => scrollToCategory(cat.id)}
+                  className={cn(
+                    "shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap border",
+                    activeCat === cat.id
+                      ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                      : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-primary/40 hover:bg-muted/50"
+                  )}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Product list — natural height, page scrolls */}
@@ -587,6 +604,7 @@ export function NewOrderForm() {
                             cartItem={cart.find(i => i.cartKey === key)}
                             onAdd={() => addToCart(group.id, group.name, product, group.defaultPack, group.defaultPrice)}
                             onQtyChange={d => updateQuantity(key, d)}
+                            onSetQty={qty => setQuantityDirect(key, qty)}
                           />
                         );
                       })}

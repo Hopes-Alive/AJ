@@ -127,18 +127,25 @@ export function OrderHistory() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      <div className="flex flex-col items-center justify-center py-28 gap-3">
+        <Loader2 className="h-7 w-7 animate-spin text-primary/60" />
+        <p className="text-sm text-muted-foreground">Loading orders…</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="text-center py-16">
-        <p className="text-destructive mb-4">{error}</p>
-        <button onClick={fetchOrders} className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted transition-colors mx-auto">
-          <RefreshCw className="h-4 w-4" /> Retry
+      <div className="flex flex-col items-center justify-center py-20 gap-4">
+        <div className="w-12 h-12 rounded-2xl bg-destructive/10 flex items-center justify-center">
+          <ClipboardList className="h-6 w-6 text-destructive/60" />
+        </div>
+        <div className="text-center">
+          <p className="text-sm font-medium text-foreground mb-1">Failed to load orders</p>
+          <p className="text-xs text-muted-foreground">{error}</p>
+        </div>
+        <button onClick={fetchOrders} className="flex items-center gap-2 px-4 py-2 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors">
+          <RefreshCw className="h-3.5 w-3.5" /> Try again
         </button>
       </div>
     );
@@ -146,57 +153,68 @@ export function OrderHistory() {
 
   if (orders.length === 0) {
     return (
-      <div className="text-center py-20">
-        <ClipboardList className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold text-foreground mb-1">No orders yet</h3>
-        <p className="text-muted-foreground text-sm">Orders will appear here once created.</p>
+      <div className="flex flex-col items-center justify-center py-24 gap-3">
+        <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center">
+          <ClipboardList className="h-8 w-8 text-muted-foreground/30" />
+        </div>
+        <div className="text-center">
+          <h3 className="text-base font-bold text-foreground mb-1">No orders yet</h3>
+          <p className="text-muted-foreground text-sm">Orders placed will appear here.</p>
+        </div>
       </div>
     );
   }
 
   return (
     <>
-      {/* Toolbar */}
-      <div className="flex items-center justify-between mb-5 gap-4 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* All filter */}
-          <button
-            onClick={() => setFilterStatus("all")}
-            className={cn(
-              "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border",
-              filterStatus === "all"
-                ? "bg-primary text-primary-foreground border-primary"
-                : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-            )}
-          >
-            All <span className="ml-1 opacity-70">{orders.length}</span>
-          </button>
-
-          {/* Per-status filters */}
-          {ALL_STATUSES.filter(([s]) => counts[s]).map(([value, cfg]) => (
-            <button
-              key={value}
-              onClick={() => setFilterStatus(value)}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-sm font-medium transition-colors border flex items-center gap-1.5",
-                filterStatus === value
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-              )}
-            >
-              <span className={cn("w-2 h-2 rounded-full", cfg.dot)} />
-              {cfg.label}
-              <span className="opacity-70">{counts[value]}</span>
-            </button>
-          ))}
+      {/* Page header */}
+      <div className="flex items-center justify-between mb-5 gap-4">
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
+            <ClipboardList className="h-4 w-4 text-blue-500" />
+          </div>
+          <div>
+            <h1 className="text-xl font-black text-foreground">My Orders</h1>
+            <p className="text-xs text-muted-foreground">{orders.length} order{orders.length !== 1 ? "s" : ""} total</p>
+          </div>
         </div>
-
         <button
           onClick={fetchOrders}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-lg px-3 py-1.5 hover:bg-muted transition-all"
         >
           <RefreshCw className="h-3.5 w-3.5" /> Refresh
         </button>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex items-center gap-1.5 flex-wrap mb-5 p-1 rounded-xl bg-muted/40 border border-border/60 w-fit max-w-full">
+        <button
+          onClick={() => setFilterStatus("all")}
+          className={cn(
+            "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
+            filterStatus === "all"
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          All <span className="ml-1 opacity-60">{orders.length}</span>
+        </button>
+        {ALL_STATUSES.filter(([s]) => counts[s]).map(([value, cfg]) => (
+          <button
+            key={value}
+            onClick={() => setFilterStatus(value)}
+            className={cn(
+              "px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5",
+              filterStatus === value
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            <span className={cn("w-1.5 h-1.5 rounded-full", cfg.dot)} />
+            {cfg.label}
+            <span className="opacity-60">{counts[value]}</span>
+          </button>
+        ))}
       </div>
 
       {filtered.length === 0 && (
