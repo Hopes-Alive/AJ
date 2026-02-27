@@ -1,4 +1,4 @@
-import { Hero } from "@/components/home/hero";
+import { ScrollVideoHero } from "@/components/home/scroll-video-hero";
 import { Stats } from "@/components/home/stats";
 import { CategoryShowcase } from "@/components/home/category-showcase";
 import { FeaturedBrands } from "@/components/home/featured-brands";
@@ -9,7 +9,7 @@ import { CTA } from "@/components/home/cta";
 export default function Home() {
   return (
     <>
-      <Hero />
+      <ScrollVideoHero />
       <Stats />
       <CategoryShowcase />
       <FeaturedBrands />
