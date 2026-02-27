@@ -173,7 +173,8 @@ export function NewOrderForm() {
   /* scrollspy — listen to window scroll, highlight active tab */
   useEffect(() => {
     function onScroll() {
-      const TAB_OFFSET = 140; // header + tab bar height
+      // account for floating header (82px on desktop) + tab bar (~44px) + buffer
+      const TAB_OFFSET = window.innerWidth >= 1024 ? 160 : 200;
       let current = displayCategories[0]?.id ?? "";
       for (const cat of displayCategories) {
         const el = sectionRefs.current[cat.id];
@@ -194,7 +195,8 @@ export function NewOrderForm() {
     setActiveCat(catId);
     const el = sectionRefs.current[catId];
     if (el) {
-      const TOP_OFFSET = 130; // site header + tab bar
+      // floating header + tab bar + a little breathing room
+      const TOP_OFFSET = window.innerWidth >= 1024 ? 160 : 200;
       const y = el.getBoundingClientRect().top + window.scrollY - TOP_OFFSET;
       window.scrollTo({ top: y, behavior: "smooth" });
     }
@@ -515,10 +517,10 @@ export function NewOrderForm() {
             />
           </div>
 
-          {/* Category tabs — sticky below site header + optional dashboard mobile header */}
+          {/* Category tabs — sticky below floating site header (pt + nav height) + optional mobile dashboard header */}
           <div
             ref={tabBarRef}
-            className="sticky top-28 lg:top-16 z-20 bg-background/95 backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 flex gap-2 overflow-x-auto py-2 mb-1 border-b border-border/50 scrollbar-none"
+            className="sticky top-[122px] sm:top-[136px] lg:top-[82px] z-20 bg-background/95 backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 flex gap-2 overflow-x-auto py-2 mb-1 border-b border-border/50 scrollbar-none"
             style={{ scrollbarWidth: "none" }}
           >
             {displayCategories.map(cat => (
@@ -595,7 +597,7 @@ export function NewOrderForm() {
         </div>
 
         {/* ── Right: Cart + order details (desktop only, sticky below site header) ── */}
-        <div className="hidden lg:flex flex-col w-[360px] shrink-0 border border-border rounded-2xl bg-card overflow-hidden sticky top-[4.5rem]" style={{ maxHeight: "calc(100vh - 5.5rem)" }}>
+        <div className="hidden lg:flex flex-col w-[360px] shrink-0 border border-border rounded-2xl bg-card overflow-hidden sticky top-[90px]" style={{ maxHeight: "calc(100vh - 100px)" }}>
           {CartPanel}
         </div>
       </div>
