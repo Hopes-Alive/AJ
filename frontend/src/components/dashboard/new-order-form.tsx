@@ -195,13 +195,15 @@ export function NewOrderForm() {
     setActiveCat(catId);
     const el = sectionRefs.current[catId];
     if (el) {
-      // floating header + tab bar + a little breathing room
+      // floating header + tab bar + breathing room
       const TOP_OFFSET = window.innerWidth >= 1024 ? 160 : 200;
       const y = el.getBoundingClientRect().top + window.scrollY - TOP_OFFSET;
       window.scrollTo({ top: y, behavior: "smooth" });
     }
+    // block: "nearest" prevents this from triggering a vertical page scroll
+    // (the tab bar is sticky so it's already visible — only scroll it horizontally)
     const tab = tabBarRef.current?.querySelector(`[data-tab="${catId}"]`) as HTMLElement;
-    tab?.scrollIntoView({ inline: "center", behavior: "smooth" });
+    tab?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
   }
 
   /* cart helpers */
