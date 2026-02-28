@@ -716,19 +716,19 @@ export function NewOrderForm() {
       {/* ── Page header ── */}
       <div className="flex items-center justify-between pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">New Order</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">Select products, set prices, and submit</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">New Order</h1>
+          <p className="text-sm text-muted-foreground mt-0.5 hidden sm:block">Select products, set prices, and submit</p>
         </div>
-        {/* Mobile: cart toggle */}
+        {/* Tablet cart button (md only, not shown on mobile where bottom bar is used) */}
         <button
           type="button"
           onClick={() => setShowCartMobile(true)}
-          className="lg:hidden relative flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-lg shadow-primary/20"
+          className="hidden md:flex lg:hidden relative items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-lg shadow-primary/20"
         >
           <ShoppingCart className="h-4 w-4" />
           {cart.length > 0
             ? <><span>${subtotal.toFixed(2)}</span><span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{totalCartons}</span></>
-            : "Order"
+            : "Cart"
           }
         </button>
       </div>
@@ -841,20 +841,66 @@ export function NewOrderForm() {
         </div>
       </div>
 
+      {/* ── Mobile sticky bottom cart bar ── */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 p-3"
+        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
+        <button
+          type="button"
+          onClick={() => setShowCartMobile(true)}
+          className="w-full flex items-center justify-between px-5 py-4 rounded-2xl text-white font-bold shadow-2xl transition-all active:scale-[0.98]"
+          style={{
+            background: cart.length > 0
+              ? "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))"
+              : "linear-gradient(135deg, oklch(0.45 0.05 172), oklch(0.4 0.04 192))",
+            boxShadow: cart.length > 0
+              ? "0 8px 32px oklch(0.52 0.13 172 / 0.45), 0 2px 8px rgba(0,0,0,0.2)"
+              : "0 4px 16px rgba(0,0,0,0.2)",
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center relative">
+              <ShoppingCart className="h-4 w-4" />
+              {totalCartons > 0 && (
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-[9px] font-black flex items-center justify-center">
+                  {totalCartons}
+                </span>
+              )}
+            </div>
+            <span className="text-sm">
+              {cart.length === 0 ? "View order" : `${cart.length} item${cart.length !== 1 ? "s" : ""} · ${totalCartons} carton${totalCartons !== 1 ? "s" : ""}`}
+            </span>
+          </div>
+          <span className="text-lg font-black">
+            {cart.length > 0 ? `$${subtotal.toFixed(2)}` : "Open cart →"}
+          </span>
+        </button>
+      </div>
+
       {/* ── Mobile cart sheet ── */}
       {showCartMobile && (
         <div className="lg:hidden fixed inset-0 z-50 flex flex-col">
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0"
+            style={{ background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
             onClick={() => setShowCartMobile(false)}
           />
-          <div className="relative z-10 mt-auto bg-card rounded-t-3xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-              <h2 className="font-bold text-foreground">Your Order</h2>
+          <div className="relative z-10 mt-auto bg-card rounded-t-3xl overflow-hidden flex flex-col"
+            style={{ maxHeight: "88vh", paddingBottom: "env(safe-area-inset-bottom)" }}>
+            {/* Handle bar */}
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+            </div>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+              <div>
+                <h2 className="font-black text-foreground">Your Order</h2>
+                {cart.length > 0 && (
+                  <p className="text-xs text-muted-foreground mt-0.5">{cart.length} items · {totalCartons} cartons</p>
+                )}
+              </div>
               <button
                 type="button"
                 onClick={() => setShowCartMobile(false)}
-                className="p-2 rounded-xl hover:bg-muted text-muted-foreground"
+                className="w-8 h-8 rounded-xl bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground"
               >
                 ✕
               </button>
@@ -865,6 +911,9 @@ export function NewOrderForm() {
           </div>
         </div>
       )}
+
+      {/* bottom spacer so content isn't hidden behind fixed bar on mobile */}
+      <div className="md:hidden h-20" />
     </div>
   );
 }

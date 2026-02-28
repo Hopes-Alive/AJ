@@ -196,22 +196,25 @@ export function OrderHistory() {
         ))}
       </div>
 
-      {/* Filter tabs */}
-      <div className="flex items-center gap-1.5 flex-wrap mb-5 p-1 rounded-xl border border-border/60 w-fit max-w-full"
-        style={{ background: "rgba(0,0,0,0.025)", boxShadow: "inset 0 1px 3px rgba(0,0,0,0.06)" }}>
-        <button onClick={() => setFilterStatus("all")}
-          className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all",
-            filterStatus === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
-          All <span className="ml-1 opacity-60">{orders.length}</span>
-        </button>
-        {ALL_STATUSES.filter(([s]) => counts[s]).map(([value, cfg]) => (
-          <button key={value} onClick={() => setFilterStatus(value)}
-            className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5",
-              filterStatus === value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
-            <span className={cn("w-1.5 h-1.5 rounded-full", cfg.dot)} />
-            {cfg.label} <span className="opacity-60">{counts[value]}</span>
+      {/* Filter tabs — scrollable on mobile */}
+      <div className="mb-5 -mx-4 sm:mx-0 px-4 sm:px-0 overflow-x-auto scrollbar-none"
+        style={{ scrollbarWidth: "none" }}>
+        <div className="flex items-center gap-1.5 p-1 rounded-xl border border-border/60 w-fit min-w-full sm:min-w-0"
+          style={{ background: "rgba(0,0,0,0.025)", boxShadow: "inset 0 1px 3px rgba(0,0,0,0.06)" }}>
+          <button onClick={() => setFilterStatus("all")}
+            className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap shrink-0",
+              filterStatus === "all" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            All <span className="ml-1 opacity-60">{orders.length}</span>
           </button>
-        ))}
+          {ALL_STATUSES.filter(([s]) => counts[s]).map(([value, cfg]) => (
+            <button key={value} onClick={() => setFilterStatus(value)}
+              className={cn("px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 whitespace-nowrap shrink-0",
+                filterStatus === value ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+              <span className={cn("w-1.5 h-1.5 rounded-full", cfg.dot)} />
+              {cfg.label} <span className="opacity-60">{counts[value]}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {filtered.length === 0 && (
@@ -245,16 +248,21 @@ export function OrderHistory() {
               {/* Row header */}
               <button
                 onClick={() => setExpandedId(isExpanded ? null : order.id)}
-                className="w-full flex items-center gap-4 px-5 py-4 hover:bg-muted/20 transition-colors text-left bg-card"
+                className="w-full flex items-center gap-3 px-4 sm:px-5 py-3.5 hover:bg-muted/20 transition-colors text-left bg-card"
               >
                 {/* Order number + name */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-black text-foreground text-sm truncate">
-                      {order.order_name || "(Unnamed order)"}
-                    </p>
+                  <p className="font-black text-foreground text-sm truncate leading-tight">
+                    {order.order_name || "(Unnamed order)"}
+                  </p>
+                  {/* Mobile: compact 2-line meta */}
+                  <div className="flex items-center gap-1.5 mt-0.5 text-xs text-muted-foreground sm:hidden flex-wrap">
+                    <span className="font-mono font-semibold text-foreground/50 text-[10px]">{order.order_number}</span>
+                    <span className="opacity-30">·</span>
+                    <span className="font-bold text-foreground/80">${order.subtotal.toFixed(2)}</span>
                   </div>
-                  <div className="flex items-center gap-2 mt-0.5 text-xs text-muted-foreground flex-wrap">
+                  {/* Tablet/desktop: full meta */}
+                  <div className="hidden sm:flex items-center gap-2 mt-0.5 text-xs text-muted-foreground flex-wrap">
                     <span className="font-mono font-semibold text-foreground/60">{order.order_number}</span>
                     <span className="opacity-30">·</span>
                     <span>{melbDate(order.created_at)}</span>
@@ -382,44 +390,42 @@ export function OrderHistory() {
                         {order.items.map((item, idx) => (
                           <div
                             key={idx}
-                            className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/20 transition-colors group"
+                            className="flex items-center gap-3 px-4 sm:px-5 py-3 hover:bg-muted/20 transition-colors group"
                           >
                             {/* Index bubble */}
-                            <span className="w-6 h-6 rounded-lg text-[10px] font-black text-muted-foreground/40 bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-muted">
+                            <span className="w-5 h-5 rounded-md text-[9px] font-black text-muted-foreground/40 bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-muted">
                               {idx + 1}
                             </span>
 
                             {/* Name + meta */}
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-bold text-foreground truncate">{item.productName}</p>
-                              <p className="text-[11px] text-muted-foreground mt-0.5">{item.groupName} · {item.pack}</p>
+                              <p className="text-xs sm:text-sm font-bold text-foreground truncate leading-tight">{item.productName}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{item.groupName} · {item.pack}</p>
                             </div>
 
                             {/* Qty badge */}
-                            <div className="flex flex-col items-center gap-0.5 shrink-0">
-                              <span
-                                className="inline-flex items-center justify-center min-w-[2rem] h-7 px-2 rounded-xl text-xs font-black"
-                                style={{
-                                  background: "oklch(0.52 0.13 172 / 0.12)",
-                                  color: "oklch(0.44 0.11 172)",
-                                  border: "1px solid oklch(0.52 0.13 172 / 0.2)",
-                                }}
-                              >
-                                ×{item.quantity}
-                              </span>
-                              <span className="text-[9px] text-muted-foreground/50 font-medium">qty</span>
-                            </div>
+                            <span
+                              className="inline-flex items-center justify-center min-w-[1.8rem] h-6 px-1.5 rounded-lg text-xs font-black shrink-0"
+                              style={{
+                                background: "oklch(0.52 0.13 172 / 0.12)",
+                                color: "oklch(0.44 0.11 172)",
+                                border: "1px solid oklch(0.52 0.13 172 / 0.2)",
+                              }}
+                            >
+                              ×{item.quantity}
+                            </span>
 
-                            {/* Price per unit */}
-                            <div className="flex flex-col items-end shrink-0 min-w-[60px]">
+                            {/* Price per unit — hidden on mobile */}
+                            <div className="hidden sm:flex flex-col items-end shrink-0 min-w-[52px]">
                               <span className="text-xs text-muted-foreground font-medium">${(item.customPrice ?? 0).toFixed(2)}</span>
-                              <span className="text-[9px] text-muted-foreground/40">per unit</span>
+                              <span className="text-[9px] text-muted-foreground/40">ea.</span>
                             </div>
 
                             {/* Line total */}
-                            <div className="flex flex-col items-end shrink-0 min-w-[70px]">
+                            <div className="flex flex-col items-end shrink-0 min-w-[58px]">
                               <span className="text-sm font-black text-foreground">${item.lineTotal.toFixed(2)}</span>
-                              <span className="text-[9px] text-muted-foreground/40">subtotal</span>
+                              {/* show unit price on mobile under total */}
+                              <span className="text-[9px] text-muted-foreground/40 sm:hidden">${(item.customPrice ?? 0).toFixed(2)} ea.</span>
                             </div>
                           </div>
                         ))}

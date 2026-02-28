@@ -9,7 +9,7 @@ import {
 } from "recharts";
 import {
   TrendingUp, DollarSign, ShoppingCart, Clock,
-  RefreshCw, Loader2, Calendar, ChevronDown, Package,
+  RefreshCw, Loader2, Calendar, ChevronDown, Package, Search, X, Medal,
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -155,6 +155,9 @@ export function DashboardStats() {
   /* category chart toggle */
   const [catMode, setCatMode] = useState<"revenue" | "cartons">("revenue");
 
+  /* product search */
+  const [productSearch, setProductSearch] = useState("");
+
   const load = useCallback(async () => {
     setLoading(true);
     try { setOrders(await getOrders()); } catch { /* silent */ }
@@ -235,6 +238,64 @@ export function DashboardStats() {
       .sort((a, b) => b[catMode] - a[catMode]);
   }, [filteredOrders, catMode]);
 
+  /* ── product breakdown ── */
+  const allProductData = useMemo(() => {
+    const map: Record<string, { revenue: number; cartons: number; orders: number; category: string }> = {};
+    for (const order of filteredOrders) {
+      if (order.status === "cancelled") continue;
+      for (const item of order.items) {
+        if (!map[item.productName]) {
+          map[item.productName] = {
+            revenue: 0, cartons: 0, orders: 0,
+            category: GROUP_TO_CAT[item.groupName] ?? item.groupName,
+          };
+        }
+        map[item.productName].revenue += item.lineTotal;
+        map[item.productName].cartons += item.quantity;
+        map[item.productName].orders  += 1;
+      }
+    }
+    return Object.entries(map)
+      .map(([name, d]) => ({ name, ...d }))
+      .sort((a, b) => b.revenue - a.revenue);
+  }, [filteredOrders]);
+
+  const top4Products = [...allProductData].sort((a, b) => b.cartons - a.cartons).slice(0, 4);
+
+  const searchedProducts = useMemo(() => {
+    const q = productSearch.trim().toLowerCase();
+    if (!q) return [];
+
+    // Build a sales lookup from order data
+    const salesMap: Record<string, { revenue: number; cartons: number; orders: number; category: string }> = {};
+    for (const p of allProductData) salesMap[p.name] = p;
+
+    // Search across the full product catalogue
+    const results: { name: string; category: string; revenue: number; cartons: number; orders: number; hasSales: boolean }[] = [];
+    const seen = new Set<string>();
+    for (const cat of categories) {
+      for (const grp of cat.groups) {
+        for (const prod of grp.products) {
+          if (prod.name.toLowerCase().includes(q) && !seen.has(prod.name)) {
+            seen.add(prod.name);
+            const sales = salesMap[prod.name];
+            results.push({
+              name: prod.name,
+              category: cat.name,
+              revenue: sales?.revenue ?? 0,
+              cartons: sales?.cartons ?? 0,
+              orders: sales?.orders ?? 0,
+              hasSales: !!sales,
+            });
+          }
+        }
+      }
+    }
+
+    // Products with sales first, then alphabetically
+    return results.sort((a, b) => b.cartons - a.cartons || a.name.localeCompare(b.name));
+  }, [allProductData, productSearch]);
+
   /* ── summary stats ── */
   const totalRevenue   = filteredOrders.filter(o => o.status !== "cancelled").reduce((s, o) => s + o.subtotal, 0);
   const totalOrders    = filteredOrders.length;
@@ -293,72 +354,81 @@ export function DashboardStats() {
     <div className="flex flex-col gap-5">
 
       {/* ── Date range bar ── */}
-      <div className="flex flex-wrap items-center gap-2">
-        {/* Presets */}
-        <div className="flex items-center gap-1 p-1 rounded-xl border border-border bg-muted/30">
-          {PRESETS.map(p => (
-            <button
-              key={p.days}
-              onClick={() => { setPreset(p.days); setShowCustom(false); }}
-              className={cn(
-                "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                !showCustom && preset === p.days
-                  ? "bg-background text-foreground shadow-sm border border-border/60"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >{p.label}</button>
-          ))}
+      <div className="rounded-2xl border border-border bg-card px-4 py-3 space-y-2.5"
+        style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
+        {/* Row 1: presets + custom toggle + refresh */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1 p-1 rounded-xl border border-border bg-muted/30">
+            {PRESETS.map(p => (
+              <button
+                key={p.days}
+                onClick={() => { setPreset(p.days); setShowCustom(false); }}
+                className={cn(
+                  "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                  !showCustom && preset === p.days
+                    ? "bg-background text-foreground shadow-sm border border-border/60"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >{p.label}</button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => setShowCustom(v => !v)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all",
+              showCustom
+                ? "bg-primary/10 border-primary/30 text-primary"
+                : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
+            )}
+          >
+            <Calendar className="h-3.5 w-3.5" />
+            <span className="hidden xs:inline">Custom</span>
+            <ChevronDown className={cn("h-3 w-3 transition-transform", showCustom && "rotate-180")} />
+          </button>
+
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-muted-foreground font-medium hidden sm:inline">{rangeLabel}</span>
+            <button onClick={load}
+              className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors">
+              <RefreshCw className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
 
-        {/* Custom range toggle */}
-        <button
-          onClick={() => setShowCustom(v => !v)}
-          className={cn(
-            "flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-all",
-            showCustom
-              ? "bg-primary/10 border-primary/30 text-primary"
-              : "border-border text-muted-foreground hover:text-foreground hover:bg-muted"
-          )}
-        >
-          <Calendar className="h-3.5 w-3.5" />
-          Custom
-          <ChevronDown className={cn("h-3 w-3 transition-transform", showCustom && "rotate-180")} />
-        </button>
-
+        {/* Row 2: custom date pickers (expandable) */}
         {showCustom && (
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-border/40">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">From</span>
             <input
               type="date"
               value={customFrom}
               max={customTo || melbToInput(todayMelb())}
               onChange={e => setCustomFrom(e.target.value)}
-              className="text-xs border border-border rounded-xl px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="text-xs border border-border rounded-xl px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 flex-1 min-w-[130px]"
             />
-            <span className="text-xs text-muted-foreground font-medium">to</span>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">To</span>
             <input
               type="date"
               value={customTo}
               min={customFrom}
               max={melbToInput(todayMelb())}
               onChange={e => setCustomTo(e.target.value)}
-              className="text-xs border border-border rounded-xl px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="text-xs border border-border rounded-xl px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 flex-1 min-w-[130px]"
             />
           </div>
         )}
 
-        <span className="ml-auto text-xs text-muted-foreground font-medium">{rangeLabel}</span>
-
-        <button onClick={load}
-          className="p-2 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted border border-border transition-colors">
-          <RefreshCw className="h-3.5 w-3.5" />
-        </button>
+        {/* Range label on mobile */}
+        <p className="text-xs text-muted-foreground font-medium sm:hidden">{rangeLabel}</p>
       </div>
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {statCards.map(({ label, value, sub, icon: Icon, color, bg, border, spark }) => (
-          <div key={label} className="rounded-2xl border p-4 flex flex-col gap-2"
-            style={{ background: bg, borderColor: border, boxShadow: "0 2px 12px rgba(0,0,0,0.04)" }}>
+          <div key={label} className="rounded-2xl border p-4 flex flex-col gap-2 relative overflow-hidden"
+            style={{ background: bg, borderColor: border, boxShadow: `0 6px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.7)` }}>
+            <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl" style={{ background: `linear-gradient(90deg, ${color}, ${color}80)` }} />
             <div className="flex items-start justify-between">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center"
                 style={{ background: `${color}20`, boxShadow: `0 2px 8px ${color}28` }}>
@@ -379,12 +449,16 @@ export function DashboardStats() {
       <div className="grid lg:grid-cols-3 gap-4">
 
         {/* Revenue bar chart */}
-        <div className="lg:col-span-2 rounded-2xl border border-border p-5"
-          style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}>
+        <div className="lg:col-span-2 rounded-2xl border border-border bg-card overflow-hidden"
+          style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
+          <div className="px-5 pt-5 pb-0">
           <div className="flex items-start justify-between mb-4">
             <div>
-              <p className="text-sm font-black text-foreground">Revenue Over Time</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{rangeLabel} · <span className="font-semibold text-foreground">${periodRevenue.toFixed(2)}</span> total</p>
+              <div className="flex items-center gap-2 mb-0.5">
+                <div className="w-2 h-4 rounded-full" style={{ background: "linear-gradient(180deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }} />
+                <p className="text-sm font-black text-foreground">Revenue Over Time</p>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5 ml-4">{rangeLabel} · <span className="font-semibold text-foreground">${periodRevenue.toFixed(2)}</span> total</p>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={190}>
@@ -405,13 +479,18 @@ export function DashboardStats() {
               </Bar>
             </BarChart>
           </ResponsiveContainer>
+          </div>
         </div>
 
         {/* Status donut */}
-        <div className="rounded-2xl border border-border p-5"
-          style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}>
-          <p className="text-sm font-black text-foreground mb-1">Order Status</p>
-          <p className="text-xs text-muted-foreground mb-3">{totalOrders} orders · {rangeLabel}</p>
+        <div className="rounded-2xl border border-border bg-card overflow-hidden"
+          style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
+          <div className="px-5 pt-5 pb-5">
+          <div className="flex items-center gap-2 mb-0.5">
+            <div className="w-2 h-4 rounded-full" style={{ background: "linear-gradient(180deg, #f59e0b, #10b981)" }} />
+            <p className="text-sm font-black text-foreground">Order Status</p>
+          </div>
+          <p className="text-xs text-muted-foreground mb-3 ml-4">{totalOrders} orders · {rangeLabel}</p>
           {pieData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={148}>
@@ -454,18 +533,24 @@ export function DashboardStats() {
           ) : (
             <div className="flex items-center justify-center h-40 text-muted-foreground/30 text-xs">No data</div>
           )}
+          </div>
         </div>
       </div>
 
       {/* ── Category sales chart ── */}
-      <div className="rounded-2xl border border-border p-5"
-        style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}>
-        <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
-          <div>
-            <p className="text-sm font-black text-foreground">Sales by Category</p>
-            <p className="text-xs text-muted-foreground mt-0.5">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden"
+        style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
+        {/* Section header bar */}
+        <div className="px-5 py-4 border-b border-border/60 flex items-start justify-between flex-wrap gap-3"
+          style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01))" }}>
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-4 rounded-full" style={{ background: "linear-gradient(180deg, #3b82f6, #8b5cf6)" }} />
+            <div>
+              <p className="text-sm font-black text-foreground">Sales by Category</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
               {rangeLabel} · {categoryData.length} active categor{categoryData.length !== 1 ? "ies" : "y"}
-            </p>
+              </p>
+            </div>
           </div>
           {/* Toggle */}
           <div className="flex items-center gap-1 p-1 rounded-xl border border-border bg-muted/30">
@@ -487,15 +572,16 @@ export function DashboardStats() {
             </button>
           </div>
         </div>
-
+        <div className="p-5">
         {categoryData.length > 0 ? (
           <>
-            <ResponsiveContainer width="100%" height={Math.max(200, categoryData.length * 38)}>
-              <BarChart data={categoryData} layout="vertical" barSize={22}
-                margin={{ top: 2, right: 70, bottom: 2, left: 4 }}>
+            <ResponsiveContainer width="100%" height={Math.max(200, categoryData.length * 42)}>
+              <BarChart data={categoryData} layout="vertical" barSize={20}
+                margin={{ top: 2, right: 64, bottom: 2, left: 0 }}>
                 <XAxis type="number" tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false}
                   tickFormatter={v => catMode === "revenue" ? `$${v}` : `${v}`} />
-                <YAxis type="category" dataKey="name" width={110}
+                <YAxis type="category" dataKey="name"
+                  width={typeof window !== "undefined" && window.innerWidth < 640 ? 80 : 110}
                   tick={{ fontSize: 10, fill: "var(--foreground)", fontWeight: 600 }} axisLine={false} tickLine={false} />
                 <Tooltip content={(p) => <CatTooltip {...p} mode={catMode} />} cursor={{ fill: "rgba(0,0,0,0.03)" }} />
                 <Bar dataKey={catMode} radius={[0, 6, 6, 0]}>
@@ -530,15 +616,171 @@ export function DashboardStats() {
             No category data for this period
           </div>
         )}
+        </div>
       </div>
+
+      {/* ── Product sales ── */}
+      {allProductData.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden"
+          style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
+          {/* Section header */}
+          <div className="px-5 py-4 border-b border-border/60 flex items-start justify-between flex-wrap gap-3"
+            style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01))" }}>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-4 rounded-full" style={{ background: "linear-gradient(180deg, #f59e0b, #ef4444)" }} />
+              <div>
+                <p className="text-sm font-black text-foreground">Sales by Product</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {rangeLabel} · {allProductData.length} product{allProductData.length !== 1 ? "s" : ""} sold
+                </p>
+              </div>
+            </div>
+            <span className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1.5 rounded-xl border border-border text-muted-foreground"
+              style={{ background: "rgba(0,0,0,0.025)" }}>
+              <Package className="h-3 w-3" />
+              Top 4 by highest carton volume
+            </span>
+          </div>
+          <div className="p-5">
+
+          {/* Top 4 podium cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+            {top4Products.map((p, i) => {
+              const medals = ["#f59e0b", "#9ca3af", "#cd7f32", "#6b7280"];
+              const medalLabels = ["1st", "2nd", "3rd", "4th"];
+              const color = medals[i];
+              return (
+                <div key={p.name}
+                  className="rounded-2xl border p-4 flex flex-col gap-2.5 relative overflow-hidden"
+                  style={{
+                    borderColor: `${color}30`,
+                    background: `${color}08`,
+                    boxShadow: `0 2px 12px ${color}15`,
+                  }}
+                >
+                  {/* rank badge */}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                      style={{ background: `${color}20`, color }}>
+                      {medalLabels[i]}
+                    </span>
+                    <Medal className="h-3.5 w-3.5 opacity-40" style={{ color }} />
+                  </div>
+                  <div>
+                    <p className="text-xs font-black text-foreground leading-snug line-clamp-2">{p.name}</p>
+                    <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{p.category}</p>
+                  </div>
+                  <div className="flex items-end justify-between mt-auto pt-1 border-t border-border/40">
+                    <div>
+                      <p className="text-base font-black text-foreground">{p.cartons}</p>
+                      <p className="text-[9px] text-muted-foreground font-semibold">cartons sold</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black text-foreground">${p.revenue.toFixed(0)}</p>
+                      <p className="text-[9px] text-muted-foreground">revenue</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Search by product name */}
+          <div className="border-t border-border/50 pt-4">
+            <div className="relative mb-3">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+              <input
+                type="text"
+                value={productSearch}
+                onChange={e => setProductSearch(e.target.value)}
+                placeholder="Search any product name…"
+                className="w-full pl-9 pr-9 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 text-sm transition-all"
+              />
+              {productSearch && (
+                <button onClick={() => setProductSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Search results */}
+            {productSearch.trim() && (
+              searchedProducts.length > 0 ? (
+                <div className="rounded-2xl border border-border overflow-hidden"
+                  style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+                  <div className="px-4 py-2.5 border-b border-border/60 flex items-center justify-between"
+                    style={{ background: "rgba(0,0,0,0.02)" }}>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      {searchedProducts.length} result{searchedProducts.length !== 1 ? "s" : ""} for &ldquo;{productSearch}&rdquo;
+                    </p>
+                  </div>
+                  <div className="divide-y divide-border/40">
+                    {searchedProducts.map((p, i) => (
+                      <div key={p.name} className="flex items-center gap-4 px-4 py-3 hover:bg-muted/20 transition-colors">
+                        <span className="text-[10px] font-black text-muted-foreground/40 w-5 text-right shrink-0">#{i + 1}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-foreground truncate">{p.name}</p>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <p className="text-[10px] text-muted-foreground">{p.category}</p>
+                            {!p.hasSales && (
+                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground/60">
+                                No sales this period
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <div className="text-right">
+                            <p className={`text-sm font-black ${p.hasSales ? "text-foreground" : "text-muted-foreground/40"}`}>
+                              ${p.revenue.toFixed(0)}
+                            </p>
+                            <p className="text-[9px] text-muted-foreground">revenue</p>
+                          </div>
+                          <div className="text-right hidden sm:block">
+                            <p className={`text-sm font-black ${p.hasSales ? "text-foreground" : "text-muted-foreground/40"}`}>
+                              {p.cartons}
+                            </p>
+                            <p className="text-[9px] text-muted-foreground">cartons</p>
+                          </div>
+                          <div className="text-right hidden sm:block">
+                            <p className={`text-sm font-black ${p.hasSales ? "text-foreground" : "text-muted-foreground/40"}`}>
+                              {p.orders}
+                            </p>
+                            <p className="text-[9px] text-muted-foreground">orders</p>
+                          </div>
+                          {/* mobile compact secondary line */}
+                          {p.hasSales && (
+                            <div className="text-right sm:hidden">
+                              <p className="text-xs text-muted-foreground">{p.cartons} ctn</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-2xl border border-dashed border-border py-8 text-center">
+                  <p className="text-sm text-muted-foreground/50">No products matching &ldquo;{productSearch}&rdquo;</p>
+                </div>
+              )
+            )}
+          </div>
+          </div>{/* /p-5 */}
+        </div>
+      )}
 
       {/* ── Recent orders ── */}
       {filteredOrders.length > 0 && (
-        <div className="rounded-2xl border border-border overflow-hidden"
-          style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.04)" }}>
-          <div className="px-5 py-3.5 border-b border-border flex items-center justify-between"
+        <div className="rounded-2xl border border-border bg-card overflow-hidden"
+          style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
+          <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between"
             style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01))" }}>
-            <p className="text-sm font-black text-foreground">Recent Orders</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-4 rounded-full" style={{ background: "linear-gradient(180deg, #10b981, #3b82f6)" }} />
+              <p className="text-sm font-black text-foreground">Recent Orders</p>
+            </div>
             <Link href="/dashboard/orders" className="text-xs font-semibold text-primary hover:underline">View all →</Link>
           </div>
           <div className="divide-y divide-border/50">
