@@ -173,63 +173,76 @@ function ProductCard({
             >{price}</p>
           </div>
 
-          {/* Quantity control */}
-          {cartItem ? (
-            <div
-              className="flex items-center justify-between rounded-xl px-1.5 py-1.5 border"
-              style={{
-                background: "oklch(0.52 0.13 172 / 0.08)",
-                borderColor: "oklch(0.52 0.13 172 / 0.25)",
-              }}
-            >
-              <button type="button" onClick={() => onQtyChange(-1)}
-                className="w-7 h-7 rounded-lg bg-background border border-border flex items-center justify-center hover:bg-red-50 hover:border-red-200 hover:text-red-500 transition-all">
-                <Minus className="h-3 w-3" />
-              </button>
-              <input
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                value={qtyInput !== "" ? qtyInput : String(cartItem.quantity)}
-                onChange={e => {
-                  const raw = e.target.value.replace(/[^0-9]/g, "");
-                  setQtyInput(raw);
-                  const v = parseInt(raw, 10);
-                  if (!isNaN(v) && v >= 1) onSetQty(v);
+          {/* Always-visible quantity row — type directly, + adds, − removes */}
+          {(() => {
+            const qty = cartItem?.quantity ?? 0;
+            const inCart = qty > 0;
+            return (
+              <div
+                className="flex items-center justify-between rounded-xl px-1.5 py-1.5 border transition-all duration-200"
+                style={inCart ? {
+                  background: "oklch(0.52 0.13 172 / 0.09)",
+                  borderColor: "oklch(0.52 0.13 172 / 0.3)",
+                } : {
+                  background: "rgba(0,0,0,0.025)",
+                  borderColor: "rgba(0,0,0,0.08)",
                 }}
-                onFocus={e => { setQtyInput(String(cartItem.quantity)); e.target.select(); }}
-                onBlur={() => {
-                  const v = parseInt(qtyInput, 10);
-                  if (isNaN(v) || v < 1) onSetQty(1);
-                  setQtyInput("");
-                }}
-                onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                className="font-black text-foreground text-sm w-10 text-center bg-transparent focus:outline-none"
-              />
-              <button type="button" onClick={() => onQtyChange(1)}
-                className="w-7 h-7 rounded-xl text-white flex items-center justify-center hover:opacity-90 transition-opacity"
-                style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }}>
-                <Plus className="h-3 w-3" />
-              </button>
-            </div>
-          ) : (
-            <button type="button" onClick={onAdd}
-              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl text-primary text-xs font-bold transition-all duration-200 border border-primary/25 hover:text-white"
-              style={{ background: "oklch(0.52 0.13 172 / 0.07)" }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 4px 12px oklch(0.52 0.13 172 / 0.35)";
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.background = "oklch(0.52 0.13 172 / 0.07)";
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "";
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = "";
-              }}
-            >
-              <Plus className="h-3.5 w-3.5" /> Add
-            </button>
-          )}
+              >
+                {/* − button: removes one; hides when qty=0 */}
+                <button
+                  type="button"
+                  onClick={() => inCart ? onQtyChange(-1) : undefined}
+                  disabled={!inCart}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed hover:enabled:bg-red-50 hover:enabled:border-red-200 hover:enabled:text-red-500 border border-border bg-background"
+                >
+                  <Minus className="h-3 w-3" />
+                </button>
+
+                {/* Qty input — always editable */}
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  placeholder="0"
+                  value={qtyInput !== "" ? qtyInput : qty > 0 ? String(qty) : ""}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^0-9]/g, "");
+                    setQtyInput(raw);
+                    const v = parseInt(raw, 10);
+                    if (!isNaN(v)) {
+                      if (v === 0) onQtyChange(-(qty)); // remove
+                      else if (inCart) onSetQty(v);
+                      else if (v >= 1) { onAdd(); onSetQty(v); }
+                    }
+                  }}
+                  onFocus={e => { setQtyInput(qty > 0 ? String(qty) : ""); e.target.select(); }}
+                  onBlur={() => {
+                    const v = parseInt(qtyInput, 10);
+                    if (!isNaN(v) && v >= 1) {
+                      if (inCart) onSetQty(v); else { onAdd(); onSetQty(v); }
+                    } else if (qtyInput === "0") {
+                      if (inCart) onQtyChange(-qty);
+                    }
+                    setQtyInput("");
+                  }}
+                  onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                  className={`font-black text-sm w-10 text-center bg-transparent focus:outline-none transition-colors ${
+                    inCart ? "text-foreground" : "text-muted-foreground placeholder:text-muted-foreground/40"
+                  }`}
+                />
+
+                {/* + button */}
+                <button
+                  type="button"
+                  onClick={() => inCart ? onQtyChange(1) : onAdd()}
+                  className="w-7 h-7 rounded-xl text-white flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
+                  style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }}
+                >
+                  <Plus className="h-3 w-3" />
+                </button>
+              </div>
+            );
+          })()}
         </div>
       </div>
     </>

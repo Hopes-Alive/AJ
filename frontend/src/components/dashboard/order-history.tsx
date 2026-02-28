@@ -11,6 +11,22 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const DATE_PRESETS = [
+  { label: "All time", days: 0 },
+  { label: "Today",    days: 1 },
+  { label: "7 days",   days: 7 },
+  { label: "14 days",  days: 14 },
+  { label: "1 month",  days: 30 },
+] as const;
+
+function isWithinDays(iso: string, days: number): boolean {
+  if (days === 0) return true;
+  const from = new Date();
+  from.setDate(from.getDate() - (days - 1));
+  from.setHours(0, 0, 0, 0);
+  return new Date(iso) >= from;
+}
+
 function melbDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-AU", {
     timeZone: "Australia/Melbourne",
@@ -97,6 +113,7 @@ export function OrderHistory() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filterStatus, setFilterStatus] = useState<Order["status"] | "all">("all");
+  const [datePreset, setDatePreset] = useState<number>(0); // 0 = all time
 
   const fetchOrders = useCallback(async () => {
     setLoading(true); setError(null);
@@ -111,12 +128,13 @@ export function OrderHistory() {
     setOrders(prev => prev.map(o => o.id === updated.id ? updated : o));
   }
 
-  const filtered = filterStatus === "all" ? orders : orders.filter(o => o.status === filterStatus);
-  const counts = orders.reduce<Record<string, number>>((acc, o) => {
+  const dateFiltered = orders.filter(o => isWithinDays(o.created_at, datePreset));
+  const filtered = dateFiltered.filter(o => filterStatus === "all" || o.status === filterStatus);
+  const counts = dateFiltered.reduce<Record<string, number>>((acc, o) => {
     acc[o.status] = (acc[o.status] || 0) + 1;
     return acc;
   }, {});
-  const totalValue = orders.filter(o => o.status !== "cancelled").reduce((s, o) => s + o.subtotal, 0);
+  const totalValue = dateFiltered.filter(o => o.status !== "cancelled").reduce((s, o) => s + o.subtotal, 0);
 
   if (loading) {
     return (
@@ -162,7 +180,7 @@ export function OrderHistory() {
   return (
     <>
       {/* Page header */}
-      <div className="flex items-start justify-between mb-6 gap-4">
+      <div className="flex items-start justify-between mb-4 gap-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
             style={{ background: "linear-gradient(135deg, oklch(0.55 0.18 250 / 0.15), oklch(0.5 0.16 260 / 0.1))", boxShadow: "0 2px 8px oklch(0.55 0.18 250 / 0.12)" }}>
@@ -170,20 +188,44 @@ export function OrderHistory() {
           </div>
           <div>
             <h1 className="text-xl font-black text-foreground">My Orders</h1>
-            <p className="text-xs text-muted-foreground mt-0.5">{orders.length} order{orders.length !== 1 ? "s" : ""} · <span className="font-semibold text-foreground">${totalValue.toFixed(2)}</span> total</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {dateFiltered.length} order{dateFiltered.length !== 1 ? "s" : ""}
+              {datePreset > 0 && <span className="ml-1 text-muted-foreground/60">· {datePreset === 1 ? "today" : datePreset === 30 ? "last month" : `last ${datePreset} days`}</span>}
+              {" · "}<span className="font-semibold text-foreground">${totalValue.toFixed(2)}</span> revenue
+            </p>
           </div>
         </div>
         <button onClick={fetchOrders}
-          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-xl px-3 py-1.5 hover:bg-muted transition-all"
+          className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground border border-border rounded-xl px-3 py-1.5 hover:bg-muted transition-all shrink-0"
           style={{ boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
           <RefreshCw className="h-3.5 w-3.5" /> Refresh
         </button>
       </div>
 
+      {/* Date range filter */}
+      <div className="flex items-center gap-1.5 mb-5 p-1 rounded-xl border border-border/60 w-fit"
+        style={{ background: "rgba(0,0,0,0.025)", boxShadow: "inset 0 1px 3px rgba(0,0,0,0.06)" }}>
+        {DATE_PRESETS.map(p => (
+          <button
+            key={p.days}
+            onClick={() => setDatePreset(p.days)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap",
+              datePreset === p.days
+                ? "bg-background text-foreground shadow-sm border border-border/60"
+                : "text-muted-foreground hover:text-foreground"
+            )}
+          >
+            {p.days > 0 && <Calendar className="h-3 w-3" />}
+            {p.label}
+          </button>
+        ))}
+      </div>
+
       {/* Stats row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
         {[
-          { label: "Total Orders", value: orders.length, icon: ClipboardList, color: "text-blue-500", bg: "oklch(0.55 0.18 250 / 0.08)" },
+          { label: "Total Orders", value: dateFiltered.length, icon: ClipboardList, color: "text-blue-500", bg: "oklch(0.55 0.18 250 / 0.08)" },
           { label: "Total Value", value: `$${totalValue.toFixed(0)}`, icon: TrendingUp, color: "text-emerald-500", bg: "oklch(0.6 0.15 160 / 0.08)" },
           { label: "In Progress", value: counts.in_progress ?? 0, icon: Package, color: "text-primary", bg: "oklch(0.52 0.13 172 / 0.08)" },
           { label: "Payment Due", value: counts.payment_pending ?? 0, icon: RefreshCw, color: "text-orange-500", bg: "oklch(0.7 0.18 50 / 0.08)" },

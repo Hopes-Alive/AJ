@@ -135,10 +135,11 @@ function CatTooltip({ active, payload, label, mode }: {
 
 /* ── preset range options ── */
 const PRESETS = [
-  { label: "7d",   days: 7  },
-  { label: "14d",  days: 14 },
-  { label: "30d",  days: 30 },
-  { label: "All",  days: 0  },
+  { label: "Today", days: 1  },
+  { label: "7d",    days: 7  },
+  { label: "14d",   days: 14 },
+  { label: "30d",   days: 30 },
+  { label: "All",   days: 0  },
 ];
 
 /* ─────────────────────────────────────────────────────── */
@@ -321,7 +322,9 @@ export function DashboardStats() {
   /* ── date range label ── */
   const rangeLabel = showCustom && customFrom && customTo
     ? `${customFrom} → ${customTo}`
-    : preset === 0 ? "All time" : `Last ${preset} days`;
+    : preset === 0 ? "All time"
+    : preset === 1 ? "Today"
+    : `Last ${preset} days`;
 
   /* ── loading / empty ── */
   if (loading) return (
