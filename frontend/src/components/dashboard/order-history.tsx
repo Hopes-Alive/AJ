@@ -116,7 +116,7 @@ export function OrderHistory() {
     acc[o.status] = (acc[o.status] || 0) + 1;
     return acc;
   }, {});
-  const totalValue = orders.reduce((s, o) => s + o.subtotal, 0);
+  const totalValue = orders.filter(o => o.status !== "cancelled").reduce((s, o) => s + o.subtotal, 0);
 
   if (loading) {
     return (

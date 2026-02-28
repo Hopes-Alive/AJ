@@ -74,6 +74,7 @@ function ProductCard({
 }) {
   const [imgError, setImgError] = useState(false);
   const [zoomed, setZoomed] = useState(false);
+  const [qtyInput, setQtyInput] = useState<string>("");
   const pack = product.pack ?? defaultPack ?? "—";
   const price = product.price ?? defaultPrice ?? "Contact";
   const hasImage = !!product.image && !imgError;
@@ -186,11 +187,24 @@ function ProductCard({
                 <Minus className="h-3 w-3" />
               </button>
               <input
-                type="number" min={1} max={999}
-                value={cartItem.quantity}
-                onChange={e => { const v = parseInt(e.target.value); if (!isNaN(v) && v >= 1) onSetQty(v); }}
-                onFocus={e => e.target.select()}
-                className="font-black text-foreground text-sm w-10 text-center bg-transparent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={qtyInput !== "" ? qtyInput : String(cartItem.quantity)}
+                onChange={e => {
+                  const raw = e.target.value.replace(/[^0-9]/g, "");
+                  setQtyInput(raw);
+                  const v = parseInt(raw, 10);
+                  if (!isNaN(v) && v >= 1) onSetQty(v);
+                }}
+                onFocus={e => { setQtyInput(String(cartItem.quantity)); e.target.select(); }}
+                onBlur={() => {
+                  const v = parseInt(qtyInput, 10);
+                  if (isNaN(v) || v < 1) onSetQty(1);
+                  setQtyInput("");
+                }}
+                onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                className="font-black text-foreground text-sm w-10 text-center bg-transparent focus:outline-none"
               />
               <button type="button" onClick={() => onQtyChange(1)}
                 className="w-7 h-7 rounded-xl text-white flex items-center justify-center hover:opacity-90 transition-opacity"
@@ -219,6 +233,33 @@ function ProductCard({
         </div>
       </div>
     </>
+  );
+}
+
+/* ── cart qty input — isolated local state so typing doesn't fight controlled value ── */
+function CartQtyInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
+  const [local, setLocal] = useState("");
+  return (
+    <input
+      type="text"
+      inputMode="numeric"
+      pattern="[0-9]*"
+      value={local !== "" ? local : String(value)}
+      onChange={e => {
+        const raw = e.target.value.replace(/[^0-9]/g, "");
+        setLocal(raw);
+        const v = parseInt(raw, 10);
+        if (!isNaN(v) && v >= 1) onChange(v);
+      }}
+      onFocus={e => { setLocal(String(value)); e.target.select(); }}
+      onBlur={() => {
+        const v = parseInt(local, 10);
+        if (isNaN(v) || v < 1) onChange(1);
+        setLocal("");
+      }}
+      onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+      className="w-8 text-center text-xs font-black text-foreground bg-transparent focus:outline-none focus:bg-muted/50 rounded px-0.5 py-0.5 transition-colors"
+    />
   );
 }
 
@@ -579,14 +620,17 @@ export function NewOrderForm() {
                   <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
                     <div />
                     {/* qty */}
-                    <div className="flex items-center gap-1 w-14 justify-center">
+                    <div className="flex items-center gap-0.5 justify-center">
                       <button type="button" onClick={() => updateQuantity(item.cartKey, -1)}
-                        className="w-5 h-5 rounded bg-muted flex items-center justify-center hover:bg-muted/70">
+                        className="w-5 h-5 rounded bg-muted flex items-center justify-center hover:bg-red-100 hover:text-red-500 transition-colors">
                         <Minus className="h-2.5 w-2.5" />
                       </button>
-                      <span className="text-sm font-bold w-4 text-center">{item.quantity}</span>
+                      <CartQtyInput
+                        value={item.quantity}
+                        onChange={v => setQuantityDirect(item.cartKey, v)}
+                      />
                       <button type="button" onClick={() => updateQuantity(item.cartKey, 1)}
-                        className="w-5 h-5 rounded bg-muted flex items-center justify-center hover:bg-muted/70">
+                        className="w-5 h-5 rounded bg-muted flex items-center justify-center hover:bg-primary/15 hover:text-primary transition-colors">
                         <Plus className="h-2.5 w-2.5" />
                       </button>
                     </div>
