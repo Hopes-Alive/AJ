@@ -60,7 +60,7 @@ function ImageZoomModal({ src, alt, onClose }: { src: string; alt: string; onClo
 
 function ProductCard({
   groupId, groupName, product, defaultPack, defaultPrice, cartItem,
-  onAdd, onQtyChange, onSetQty,
+  onAdd, onQtyChange, onSetQty, onSetPrice,
 }: {
   groupId: string;
   groupName: string;
@@ -71,10 +71,12 @@ function ProductCard({
   onAdd: () => void;
   onQtyChange: (delta: number) => void;
   onSetQty: (qty: number) => void;
+  onSetPrice: (val: string) => void;
 }) {
   const [imgError, setImgError] = useState(false);
   const [zoomed, setZoomed] = useState(false);
   const [qtyInput, setQtyInput] = useState<string>("");
+  const [priceInput, setPriceInput] = useState<string>("");
   const pack = product.pack ?? defaultPack ?? "—";
   const price = product.price ?? defaultPrice ?? "Contact";
   const hasImage = !!product.image && !imgError;
@@ -162,79 +164,117 @@ function ProductCard({
             {product.name}
           </p>
           <p className="text-[10px] text-muted-foreground/70">{pack}</p>
-          <div className="flex items-center justify-between mt-1.5 mb-2.5">
-            <p
-              className="text-sm font-black"
-              style={{
-                background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-              }}
-            >{price}</p>
+
+          {/* Price — static default; editable inline when item is in cart */}
+          <div className="mt-1.5 mb-2.5">
+            {cartItem ? (
+              <div className="flex items-center gap-1">
+                <span className="text-[10px] text-muted-foreground/60 font-medium">$</span>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={priceInput !== "" ? priceInput : String(cartItem.customPrice)}
+                  onChange={e => {
+                    const raw = e.target.value.replace(/[^0-9.]/g, "");
+                    setPriceInput(raw);
+                  }}
+                  onFocus={e => e.target.select()}
+                  onBlur={() => {
+                    if (priceInput !== "") onSetPrice(priceInput);
+                    setPriceInput("");
+                  }}
+                  onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
+                  className="font-black text-sm w-full bg-transparent border-b-2 focus:outline-none pb-0.5 transition-colors"
+                  style={{
+                    borderColor: priceInput !== "" ? "oklch(0.52 0.13 172 / 0.8)" : "oklch(0.52 0.13 172 / 0.3)",
+                    color: priceInput !== "" ? "oklch(0.35 0.13 172)" : "oklch(0.44 0.13 172)",
+                  }}
+                />
+                {cartItem.customPrice !== parsePrice(price) && (
+                  <button
+                    type="button"
+                    title="Reset to default"
+                    onClick={() => onSetPrice(price)}
+                    className="text-[9px] text-muted-foreground/50 hover:text-red-400 transition-colors shrink-0"
+                  >↺</button>
+                )}
+              </div>
+            ) : (
+              <p
+                className="text-sm font-black"
+                style={{
+                  background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >{price}</p>
+            )}
           </div>
 
-          {/* Always-visible quantity row — type directly, + adds, − removes */}
+          {/* Quantity control — Uber Eats style */}
           {(() => {
             const qty = cartItem?.quantity ?? 0;
             const inCart = qty > 0;
-            return (
-              <div
-                className="flex items-center justify-between rounded-xl px-1.5 py-1.5 border transition-all duration-200"
-                style={inCart ? {
-                  background: "oklch(0.52 0.13 172 / 0.09)",
-                  borderColor: "oklch(0.52 0.13 172 / 0.3)",
-                } : {
-                  background: "rgba(0,0,0,0.025)",
-                  borderColor: "rgba(0,0,0,0.08)",
-                }}
-              >
-                {/* − button: removes one; hides when qty=0 */}
+            const displayVal = qtyInput !== "" ? qtyInput : String(qty);
+
+            if (!inCart) {
+              return (
                 <button
                   type="button"
-                  onClick={() => inCart ? onQtyChange(-1) : undefined}
-                  disabled={!inCart}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all disabled:opacity-20 disabled:cursor-not-allowed hover:enabled:bg-red-50 hover:enabled:border-red-200 hover:enabled:text-red-500 border border-border bg-background"
+                  onClick={onAdd}
+                  className="w-full h-9 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all"
+                  style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }}
+                >
+                  <Plus className="h-4 w-4" />
+                  Add
+                </button>
+              );
+            }
+
+            return (
+              <div
+                className="flex items-center justify-between rounded-xl px-1 py-1 border"
+                style={{
+                  background: "oklch(0.52 0.13 172 / 0.09)",
+                  borderColor: "oklch(0.52 0.13 172 / 0.35)",
+                }}
+              >
+                {/* − button */}
+                <button
+                  type="button"
+                  onClick={() => onQtyChange(-1)}
+                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500 border border-border bg-background"
                 >
                   <Minus className="h-3 w-3" />
                 </button>
 
-                {/* Qty input — always editable */}
+                {/* Editable qty — only commits on blur / Enter */}
                 <input
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  placeholder="0"
-                  value={qtyInput !== "" ? qtyInput : qty > 0 ? String(qty) : ""}
+                  value={displayVal}
                   onChange={e => {
                     const raw = e.target.value.replace(/[^0-9]/g, "");
                     setQtyInput(raw);
-                    const v = parseInt(raw, 10);
-                    if (!isNaN(v)) {
-                      if (v === 0) onQtyChange(-(qty)); // remove
-                      else if (inCart) onSetQty(v);
-                      else if (v >= 1) { onAdd(); onSetQty(v); }
-                    }
                   }}
-                  onFocus={e => { setQtyInput(qty > 0 ? String(qty) : ""); e.target.select(); }}
+                  onFocus={e => e.target.select()}
                   onBlur={() => {
-                    const v = parseInt(qtyInput, 10);
-                    if (!isNaN(v) && v >= 1) {
-                      if (inCart) onSetQty(v); else { onAdd(); onSetQty(v); }
-                    } else if (qtyInput === "0") {
-                      if (inCart) onQtyChange(-qty);
+                    if (qtyInput !== "") {
+                      const v = parseInt(qtyInput, 10);
+                      if (!isNaN(v) && v >= 1) onSetQty(v);
+                      else onQtyChange(-qty);
                     }
                     setQtyInput("");
                   }}
                   onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                  className={`font-black text-sm w-10 text-center bg-transparent focus:outline-none transition-colors ${
-                    inCart ? "text-foreground" : "text-muted-foreground placeholder:text-muted-foreground/40"
-                  }`}
+                  className="font-black text-sm w-10 text-center bg-transparent focus:outline-none focus:bg-primary/10 rounded transition-colors text-foreground cursor-text"
                 />
 
                 {/* + button */}
                 <button
                   type="button"
-                  onClick={() => inCart ? onQtyChange(1) : onAdd()}
+                  onClick={() => onQtyChange(1)}
                   className="w-7 h-7 rounded-xl text-white flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
                   style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }}
                 >
@@ -357,24 +397,25 @@ export function NewOrderForm() {
   /* cart helpers */
   function getCartItem(key: string) { return cart.find(i => i.cartKey === key); }
 
-  function addToCart(groupId: string, groupName: string, product: { name: string; pack?: string; price?: string }, defaultPack?: string, defaultPrice?: string) {
+  function addToCart(groupId: string, groupName: string, product: { name: string; pack?: string; price?: string }, defaultPack?: string, defaultPrice?: string, initialQty = 1) {
     const key = cartKey(groupId, product.name);
     const priceStr = product.price ?? defaultPrice ?? "0";
     const pack = product.pack ?? defaultPack ?? "—";
     const cp = parsePrice(priceStr);
+    const q = Math.max(1, initialQty);
 
     setCart(prev => {
       const existing = prev.find(i => i.cartKey === key);
       if (existing) {
         return prev.map(i => i.cartKey === key
-          ? { ...i, quantity: i.quantity + 1, lineTotal: (i.quantity + 1) * i.customPrice }
+          ? { ...i, quantity: q, lineTotal: q * i.customPrice }
           : i
         );
       }
       return [...prev, {
         cartKey: key, productId: key, productName: product.name,
         groupName, pack, price: priceStr, customPrice: cp,
-        quantity: 1, lineTotal: cp, priceEditing: false,
+        quantity: q, lineTotal: cp * q, priceEditing: false,
       }];
     });
   }
@@ -501,6 +542,9 @@ export function NewOrderForm() {
   /* ── cart panel (shared between desktop sidebar and mobile sheet) ── */
   const CartPanel = (
     <form onSubmit={handleSubmit} className="flex flex-col h-full">
+      {/* Scrollable body: order details + cart items */}
+      <div className="flex-1 overflow-y-auto">
+
       {/* Order details */}
       <div className="px-4 py-4 border-b border-border space-y-3">
         <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
@@ -592,7 +636,7 @@ export function NewOrderForm() {
       </div>
 
       {/* Cart items */}
-      <div className="flex-1 overflow-y-auto">
+      <div>
         {cart.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-center px-4">
             <ShoppingCart className="h-10 w-10 text-muted-foreground/20 mb-3" />
@@ -699,6 +743,8 @@ export function NewOrderForm() {
           </div>
         )}
       </div>
+
+      </div>{/* end scrollable body */}
 
       {/* Footer: subtotal + submit */}
       <div className="border-t border-border px-4 py-4 space-y-3 bg-card">
@@ -824,19 +870,21 @@ export function NewOrderForm() {
                     {/* Product cards grid */}
                     <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
                       {group.products.map((product, pIdx) => {
-                        const key = `${cartKey(group.id, product.name)}-${pIdx}`;
+                        const ck = cartKey(group.id, product.name);
+                        const reactKey = `${ck}-${pIdx}`;
                         return (
                           <ProductCard
-                            key={key}
+                            key={reactKey}
                             groupId={group.id}
                             groupName={group.name}
                             product={product}
                             defaultPack={group.defaultPack}
                             defaultPrice={group.defaultPrice}
-                            cartItem={cart.find(i => i.cartKey === key)}
+                            cartItem={cart.find(i => i.cartKey === ck)}
                             onAdd={() => addToCart(group.id, group.name, product, group.defaultPack, group.defaultPrice)}
-                            onQtyChange={d => updateQuantity(key, d)}
-                            onSetQty={qty => setQuantityDirect(key, qty)}
+                            onQtyChange={d => updateQuantity(ck, d)}
+                            onSetQty={qty => setQuantityDirect(ck, qty)}
+                            onSetPrice={val => updateCustomPrice(ck, val)}
                           />
                         );
                       })}
@@ -849,7 +897,7 @@ export function NewOrderForm() {
         </div>
 
         {/* ── Right: Cart + order details (desktop only, sticky below site header) ── */}
-        <div className="hidden lg:flex flex-col w-[360px] shrink-0 border border-border rounded-2xl bg-card overflow-hidden sticky top-[90px]" style={{ maxHeight: "calc(100vh - 100px)" }}>
+        <div className="hidden lg:flex flex-col w-[360px] shrink-0 border border-border rounded-2xl bg-card overflow-hidden sticky top-[90px]" style={{ height: "calc(100vh - 100px)" }}>
           {CartPanel}
         </div>
       </div>
@@ -898,7 +946,7 @@ export function NewOrderForm() {
             onClick={() => setShowCartMobile(false)}
           />
           <div className="relative z-10 mt-auto bg-card rounded-t-3xl overflow-hidden flex flex-col"
-            style={{ maxHeight: "88vh", paddingBottom: "env(safe-area-inset-bottom)" }}>
+            style={{ height: "88vh", paddingBottom: "env(safe-area-inset-bottom)" }}>
             {/* Handle bar */}
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
