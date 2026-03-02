@@ -335,7 +335,7 @@ export function OrderHistory() {
                   <div className="flex items-center justify-between gap-4 px-5 py-4 flex-wrap border-b border-border/40"
                     style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.02), transparent)" }}>
                     <div className="flex items-center gap-3">
-                      <div className="h-6 w-[3px] rounded-full" style={{ background: cfg.color ?? "#888" }} />
+                      <div className="h-6 w-[3px] rounded-full" style={{ background: cfg.border ?? "#888" }} />
                       <div>
                         <p className="text-[9px] font-black text-muted-foreground/50 uppercase tracking-[0.18em]">Update Status</p>
                         <p className="text-xs text-muted-foreground mt-0.5">Change this order&apos;s payment status</p>
