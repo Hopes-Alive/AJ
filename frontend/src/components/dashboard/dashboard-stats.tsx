@@ -104,23 +104,34 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
 }
 
 /* ── custom tooltips ── */
-function RevenueTooltip({ active, payload, label }: { active?: boolean; payload?: { value: number }[]; label?: string }) {
+function RevenueTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: ReadonlyArray<{ value?: number | string }>;
+  label?: string | number;
+}) {
   if (!active || !payload?.length) return null;
+  const raw = payload[0]?.value;
+  const value = typeof raw === "number" ? raw : Number(raw ?? 0);
   return (
     <div className="rounded-xl border border-border bg-card px-3.5 py-2.5"
       style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}>
       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
-      <p className="font-black text-base text-foreground">${(payload[0].value ?? 0).toFixed(2)}</p>
+      <p className="font-black text-base text-foreground">${Number.isFinite(value) ? value.toFixed(2) : "0.00"}</p>
     </div>
   );
 }
 
 function CatTooltip({ active, payload, label, mode }: {
-  active?: boolean; payload?: { value: number; payload: { revenue: number; cartons: number } }[];
-  label?: string; mode: "revenue" | "cartons";
+  active?: boolean;
+  payload?: ReadonlyArray<{ value?: number | string; payload?: { revenue: number; cartons: number } }>;
+  label?: string | number; mode: "revenue" | "cartons";
 }) {
   if (!active || !payload?.length) return null;
-  const d = payload[0].payload;
+  const d = payload[0]?.payload ?? { revenue: 0, cartons: 0 };
   return (
     <div className="rounded-xl border border-border bg-card px-3.5 py-2.5 min-w-[150px]"
       style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}>
@@ -477,7 +488,10 @@ export function DashboardStats() {
                   <Cell key={i} fill={entry.revenue > 0 ? "oklch(0.52 0.13 172)" : "oklch(0.52 0.13 172 / 0.18)"} />
                 ))}
                 <LabelList dataKey="revenue" position="top"
-                  formatter={(v: number) => v > 0 ? `$${v.toFixed(0)}` : ""}
+                  formatter={(value) => {
+                    const n = typeof value === "number" ? value : Number(value);
+                    return Number.isFinite(n) && n > 0 ? `$${n.toFixed(0)}` : "";
+                  }}
                   style={{ fontSize: 9, fontWeight: 700, fill: "var(--muted-foreground)" }} />
               </Bar>
             </BarChart>
@@ -592,7 +606,11 @@ export function DashboardStats() {
                     <Cell key={i} fill={entry.color} />
                   ))}
                   <LabelList dataKey={catMode} position="right"
-                    formatter={(v: number) => catMode === "revenue" ? `$${v.toFixed(0)}` : `${v} ctn`}
+                    formatter={(value) => {
+                      const n = typeof value === "number" ? value : Number(value);
+                      if (!Number.isFinite(n)) return "";
+                      return catMode === "revenue" ? `$${n.toFixed(0)}` : `${n} ctn`;
+                    }}
                     style={{ fontSize: 10, fontWeight: 700, fill: "var(--foreground)" }} />
                 </Bar>
               </BarChart>
