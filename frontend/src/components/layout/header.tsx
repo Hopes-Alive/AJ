@@ -13,9 +13,11 @@ import {
   Wrench,
   MessageSquare,
   Phone,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
+import { createClient } from "@/lib/supabase/client";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -29,6 +31,18 @@ export function Header() {
   const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      setIsAdmin(!!data.session?.user?.user_metadata?.is_admin);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session?.user?.user_metadata?.is_admin);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -131,6 +145,14 @@ export function Header() {
               {/* ─── Right side ─── */}
               <div className="flex items-center gap-2">
                 <ModeToggle />
+
+                <Link
+                  href={isAdmin ? "/dashboard" : "/admin"}
+                  className="hidden lg:inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-medium text-muted-foreground border border-border hover:text-foreground hover:bg-muted/50 transition-colors"
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  {isAdmin ? "Dashboard" : "Admin"}
+                </Link>
 
                 <Link
                   href="/contact"
@@ -308,6 +330,24 @@ export function Header() {
                     </p>
                   </div>
                 </a>
+
+                <Link
+                  href={isAdmin ? "/dashboard" : "/admin"}
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-muted/25 mb-2 transition-colors hover:bg-muted/40"
+                >
+                  <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <ShieldCheck className="h-3.5 w-3.5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">
+                      {isAdmin ? "Dashboard" : "Admin Login"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {isAdmin ? "Manage orders" : "Administrator access only"}
+                    </p>
+                  </div>
+                </Link>
 
                 <Link
                   href="/contact"
