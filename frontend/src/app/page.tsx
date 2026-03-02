@@ -9,6 +9,7 @@ import { CTA } from "@/components/home/cta";
 export default function Home() {
   return (
     <>
+      {/* Landing page sections intentionally render in this order. */}
       <ScrollVideoHero />
       <Stats />
       <CategoryShowcase />

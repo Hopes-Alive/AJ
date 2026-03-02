@@ -4,6 +4,7 @@ import adminRouter from "./admin";
 
 const router = Router();
 
+// Base API route registration for the backend service.
 router.use("/admin", adminRouter);
 router.use("/orders", ordersRouter);
 
