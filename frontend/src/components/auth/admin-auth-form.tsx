@@ -104,9 +104,8 @@ export function AdminAuthForm({ portalType = "admin" }: AdminAuthFormProps) {
       } catch {
         // Safe default: keep login mode until backend status is available.
         setMode("login");
-        setError(
-          `Could not verify ${portalLabel.toLowerCase()} account status from backend. Please refresh and try again.`
-        );
+        // Do not block sign-in UI if status endpoint is temporarily unreachable.
+        setError(null);
       }
     }
     checkAdminStatus();
