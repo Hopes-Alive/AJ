@@ -33,6 +33,14 @@ app.use(
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.get("/", (_req, res) => {
+  res.json({
+    success: true,
+    message: "AJ backend API is running",
+    health: "/api/health",
+  });
+});
+
 app.use("/api", apiRouter);
 
 app.use((_req, res) => {
