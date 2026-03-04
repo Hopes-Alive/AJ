@@ -156,17 +156,26 @@ export const categories: Category[] = [
   {
     id: "tea",
     name: "Tea",
-    description: "Premium green tea in various formats and sizes.",
+    description: "Premium green and black tea in various formats and sizes.",
     icon: "leaf",
     groups: [
       {
         id: "green-tea",
         name: "AJ Green Tea",
         products: [
+          { name: "AJ Green Tea Pekoe", pack: "500 g", sku: "AJ0316" },
           { name: "Green Tea Teabag", image: "/images/products/green-tea-teabag.png", pack: "24 × 200 g", price: "$120.00" },
           { name: "Green Tea Loose", image: "/images/products/green-tea-loose.png", pack: "24 × 500 g", price: "$132.00" },
           { name: "Green Tea Jar (800g)", image: "/images/products/green-tea-jar-800g.png", pack: "8 × 800 g", price: "$80.00" },
           { name: "Green Tea Jar (500g)", image: "/images/products/green-tea-jar-500g.png", pack: "12 × 500 g", price: "$66.00" },
+        ],
+      },
+      {
+        id: "black-tea",
+        name: "AJ Black Tea",
+        products: [
+          { name: "Black Tea Cardamom Flavour", image: "/images/products/aj-black-tea-cardamom-200g.png", pack: "200 g", sku: "AJ0315" },
+          { name: "Black Tea Cardamom Flavour", image: "/images/products/aj-black-tea-cardamom-500g.png", pack: "500 g", sku: "AJ0314" },
         ],
       },
     ],
@@ -288,9 +297,10 @@ export const categories: Category[] = [
           { name: "Biryani", image: "/images/products/shan-biryani.png" },
           { name: "Hunter Beef", image: "/images/products/shan-hunter-beef.png" },
           { name: "Fried Chops/Steaks", image: "/images/products/shan-fried-chops.png" },
+          { name: "Fried Fish", sku: "AJ0322" },
           { name: "Fish Biryani", image: "/images/products/shan-fish-biryani.png" },
           { name: "Chaat Masala", image: "/images/products/shan-chaat-masala.png" },
-          { name: "Chicken Handi", image: "/images/products/shan-chicken-handi.png" },
+          { name: "Chicken Handi", image: "/images/products/shan-chicken-handi.png", sku: "AJ0321" },
           { name: "Chicken Broast", image: "/images/products/shan-chicken-broast.png" },
           { name: "Bihari Kabab", image: "/images/products/shan-bihari-kabab.png" },
           { name: "Butter Chicken", image: "/images/products/shan-butter-chicken.png" },
@@ -322,6 +332,15 @@ export const categories: Category[] = [
           { name: "Chapli Kabab", image: "/images/products/shan-chapli-kabab.png" },
           { name: "Sindhi Biryani", image: "/images/products/shan-sindhi-biryani.png" },
           { name: "Tikka Seekh Kabab", image: "/images/products/shan-tikka-seekh-kabab.png" },
+        ],
+      },
+      {
+        id: "shan-pastes",
+        name: "Shan Pastes",
+        products: [
+          { name: "Garlic Paste", image: "/images/products/shan-garlic-paste.png", pack: "12 × 700 g", sku: "AJ0318" },
+          { name: "Ginger Garlic Paste", image: "/images/products/shan-ginger-garlic-paste.png", pack: "12 × 300 g", sku: "AJ0319" },
+          { name: "Ginger Paste", image: "/images/products/shan-ginger-paste.png", pack: "12 × 700 g", sku: "AJ0320" },
         ],
       },
     ],

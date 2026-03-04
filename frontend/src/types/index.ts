@@ -3,6 +3,7 @@ export interface Product {
   pack?: string;
   price?: string;
   image?: string;
+  sku?: string;
 }
 
 export interface ProductGroup {
