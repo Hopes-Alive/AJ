@@ -17,11 +17,14 @@ import {
   ArrowRight,
   ArrowLeft,
   Package2,
+  Code2,
+  Shield,
 } from "lucide-react";
 
 const BACKEND_URL = BACKEND_BASE_URL;
 
 type Mode = "loading" | "register" | "login";
+type PortalType = "admin" | "developer";
 
 const BRAND_ITEMS = [
   { label: "130+ Products", sub: "across all categories" },
@@ -35,7 +38,11 @@ const CATEGORIES = [
   "Shan Masala", "Cleaning", "Harris Juice",
 ];
 
-export function AdminAuthForm() {
+interface AdminAuthFormProps {
+  portalType?: PortalType;
+}
+
+export function AdminAuthForm({ portalType = "admin" }: AdminAuthFormProps) {
   const router = useRouter();
   const [mode, setMode] = useState<Mode>("loading");
 
@@ -46,10 +53,41 @@ export function AdminAuthForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isDeveloperPortal = portalType === "developer";
+  const portalLabel = isDeveloperPortal ? "Developer" : "Admin";
+  const portalApiPath = isDeveloperPortal ? "developer" : "admin";
+  const redirectPath = isDeveloperPortal ? "/dashboard/catalog" : "/dashboard";
+  const portalTheme = isDeveloperPortal
+    ? {
+        leftBg:
+          "linear-gradient(145deg, oklch(0.16 0.04 265) 0%, oklch(0.12 0.03 250) 50%, oklch(0.10 0.02 235) 100%)",
+        glow: "oklch(0.62 0.12 250 / 0.16)",
+        badgeText: "Developer Workspace",
+        headline: "Build and Maintain",
+        highlight: "Product Catalogue",
+        description:
+          "Manage categories, sub categories, products, and product images for the live website catalogue.",
+        footerNote: "Restricted to authorised developers only",
+        icon: Code2,
+      }
+    : {
+        leftBg:
+          "linear-gradient(145deg, oklch(0.18 0.05 172) 0%, oklch(0.13 0.04 190) 50%, oklch(0.10 0.03 220) 100%)",
+        glow: "oklch(0.45 0.12 172 / 0.15)",
+        badgeText: "Admin Operations",
+        headline: "Manage Orders and",
+        highlight: "Business Operations",
+        description:
+          "Track wholesale orders, manage fulfillment workflow, and monitor order activity from one secure portal.",
+        footerNote: "Restricted to authorised admins only",
+        icon: Shield,
+      };
+  const PortalIcon = portalTheme.icon;
+
   useEffect(() => {
     async function checkAdminStatus() {
       try {
-        const res = await fetch(`${BACKEND_URL}/api/admin/status`);
+        const res = await fetch(`${BACKEND_URL}/api/${portalApiPath}/status`);
         if (!res.ok) {
           throw new Error("Failed to fetch account status");
         }
@@ -59,12 +97,12 @@ export function AdminAuthForm() {
         // Safe default: show first-time setup when status cannot be verified.
         setMode("register");
         setError(
-          "Could not verify developer account status. You can proceed with first-time setup."
+          `Could not verify ${portalLabel.toLowerCase()} account status. You can proceed with first-time setup.`
         );
       }
     }
     checkAdminStatus();
-  }, []);
+  }, [portalApiPath, portalLabel]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -74,7 +112,7 @@ export function AdminAuthForm() {
       const supabase = createClient();
 
       if (mode === "register") {
-        const res = await fetch(`${BACKEND_URL}/api/admin/register`, {
+        const res = await fetch(`${BACKEND_URL}/api/${portalApiPath}/register`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password, fullName }),
@@ -92,7 +130,7 @@ export function AdminAuthForm() {
           return;
         }
 
-        router.push("/dashboard");
+        router.push(redirectPath);
         router.refresh();
         return;
       }
@@ -104,13 +142,17 @@ export function AdminAuthForm() {
         return;
       }
 
-      if (!data.user?.user_metadata?.is_admin) {
+      const hasPortalAccess = isDeveloperPortal
+        ? data.user?.user_metadata?.is_developer
+        : data.user?.user_metadata?.is_admin;
+
+      if (!hasPortalAccess) {
         await supabase.auth.signOut();
-        setError("Access denied. This portal is for developers only.");
+        setError(`Access denied. This portal is for ${portalLabel.toLowerCase()}s only.`);
         return;
       }
 
-      router.push("/dashboard");
+      router.push(redirectPath);
       router.refresh();
     } catch {
       setError("Something went wrong. Please try again.");
@@ -126,14 +168,14 @@ export function AdminAuthForm() {
       <div
         className="hidden lg:flex lg:w-[52%] xl:w-[55%] flex-col relative overflow-hidden"
         style={{
-          background: "linear-gradient(145deg, oklch(0.18 0.05 172) 0%, oklch(0.13 0.04 190) 50%, oklch(0.10 0.03 220) 100%)",
+          background: portalTheme.leftBg,
         }}
       >
         {/* Decorative radial glow */}
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse 70% 60% at 30% 40%, oklch(0.45 0.12 172 / 0.15) 0%, transparent 70%)",
+            background: `radial-gradient(ellipse 70% 60% at 30% 40%, ${portalTheme.glow} 0%, transparent 70%)`,
           }}
         />
 
@@ -165,13 +207,14 @@ export function AdminAuthForm() {
           <div className="mt-auto mb-auto pt-16">
             <div className="flex items-center gap-2 mb-6">
               <span className="h-px w-8 bg-primary/60" />
+              <PortalIcon className="h-3.5 w-3.5 text-primary/80" />
               <span className="text-primary/80 text-xs font-semibold tracking-[0.2em] uppercase">
-                Admin Portal
+                {portalTheme.badgeText}
               </span>
             </div>
 
             <h1 className="text-4xl xl:text-5xl font-black text-white leading-[1.1] mb-6">
-              Manage Your
+              {portalTheme.headline}
               <br />
               <span
                 style={{
@@ -180,12 +223,12 @@ export function AdminAuthForm() {
                   WebkitTextFillColor: "transparent",
                 }}
               >
-                Wholesale Orders
+                {portalTheme.highlight}
               </span>
             </h1>
 
             <p className="text-white/50 text-base leading-relaxed max-w-sm">
-              Place and track orders, manage pricing, and keep your customers stocked — all from one place.
+              {portalTheme.description}
             </p>
 
             {/* Stats row */}
@@ -265,8 +308,8 @@ export function AdminAuthForm() {
                 </h2>
                 <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
                   {mode === "register"
-                    ? "Create the developer account to start managing products and orders."
-                    : "Sign in to your developer dashboard to manage products and orders."}
+                    ? `Create the ${portalLabel.toLowerCase()} account to start managing products and orders.`
+                    : `Sign in to your ${portalLabel.toLowerCase()} dashboard to manage products and orders.`}
                 </p>
               </div>
 
@@ -362,7 +405,9 @@ export function AdminAuthForm() {
                   )}
                   {submitting
                     ? mode === "register" ? "Creating account…" : "Signing in…"
-                    : mode === "register" ? "Create developer account" : "Sign in to dashboard"}
+                    : mode === "register"
+                      ? `Create ${portalLabel.toLowerCase()} account`
+                      : "Sign in to dashboard"}
                   {!submitting && (
                     <ArrowRight className="h-4 w-4 ml-auto transition-transform group-hover:translate-x-0.5" />
                   )}
@@ -373,7 +418,7 @@ export function AdminAuthForm() {
               <div className="mt-8 pt-6 border-t border-border/50 flex items-center justify-center gap-2">
                 <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground/40" />
                 <p className="text-xs text-muted-foreground/50 text-center">
-                  Restricted to authorised developers only
+                  {portalTheme.footerNote}
                 </p>
               </div>
             </>

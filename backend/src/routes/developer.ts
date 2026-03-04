@@ -4,7 +4,7 @@ import { ApiResponse } from "../types";
 
 const router = Router();
 
-// GET /api/admin/status — public, checks if an admin account exists yet
+// GET /api/developer/status — public, checks if a developer account exists yet
 router.get("/status", async (_req: Request, res: Response) => {
   const { data, error } = await supabaseAdmin.auth.admin.listUsers();
 
@@ -14,18 +14,18 @@ router.get("/status", async (_req: Request, res: Response) => {
     return;
   }
 
-  const adminExists = data.users.some(
-    (u) => u.user_metadata?.is_admin === true
+  const developerExists = data.users.some(
+    (u) => u.user_metadata?.is_developer === true
   );
 
   const response: ApiResponse<{ registered: boolean }> = {
     success: true,
-    data: { registered: adminExists },
+    data: { registered: developerExists },
   };
   res.json(response);
 });
 
-// POST /api/admin/register — creates the admin account via service role (bypasses email confirmation)
+// POST /api/developer/register — creates the developer account via service role
 router.post("/register", async (req: Request, res: Response) => {
   const { email, password, fullName } = req.body as {
     email: string;
@@ -34,29 +34,33 @@ router.post("/register", async (req: Request, res: Response) => {
   };
 
   if (!email || !password || !fullName) {
-    const response: ApiResponse = { success: false, error: "email, password and fullName are required" };
+    const response: ApiResponse = {
+      success: false,
+      error: "email, password and fullName are required",
+    };
     res.status(400).json(response);
     return;
   }
 
-  // Refuse if an admin account already exists
   const { data: existing } = await supabaseAdmin.auth.admin.listUsers();
-  const adminAlreadyExists = existing?.users.some(
-    (u) => u.user_metadata?.is_admin === true
+  const developerAlreadyExists = existing?.users.some(
+    (u) => u.user_metadata?.is_developer === true
   );
 
-  if (adminAlreadyExists) {
-    const response: ApiResponse = { success: false, error: "An admin account already exists" };
+  if (developerAlreadyExists) {
+    const response: ApiResponse = {
+      success: false,
+      error: "A developer account already exists",
+    };
     res.status(409).json(response);
     return;
   }
 
-  // Create user via admin API — email_confirm: true skips confirmation email
   const { error } = await supabaseAdmin.auth.admin.createUser({
     email,
     password,
     email_confirm: true,
-    user_metadata: { full_name: fullName, is_admin: true, is_developer: false },
+    user_metadata: { full_name: fullName, is_developer: true, is_admin: false },
   });
 
   if (error) {
@@ -65,7 +69,7 @@ router.post("/register", async (req: Request, res: Response) => {
     return;
   }
 
-  const response: ApiResponse = { success: true, message: "Admin account created" };
+  const response: ApiResponse = { success: true, message: "Developer account created" };
   res.status(201).json(response);
 });
 

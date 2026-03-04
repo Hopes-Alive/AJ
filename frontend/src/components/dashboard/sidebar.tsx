@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard, ShoppingCart, ClipboardList, Search,
@@ -10,7 +11,19 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+type Role = "admin" | "developer";
+
+interface NavItem {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  exact?: boolean;
+  color: string;
+  desc: string;
+  roles: Role[];
+}
+
+const navItems: NavItem[] = [
   {
     href: "/dashboard",
     label: "Overview",
@@ -18,6 +31,7 @@ const navItems = [
     exact: true,
     color: "#10b981",
     desc: "Charts & summary",
+    roles: ["admin"],
   },
   {
     href: "/dashboard/new-order",
@@ -25,6 +39,7 @@ const navItems = [
     icon: ShoppingCart,
     color: "#3b82f6",
     desc: "Create an order",
+    roles: ["admin"],
   },
   {
     href: "/dashboard/orders",
@@ -32,6 +47,7 @@ const navItems = [
     icon: ClipboardList,
     color: "#8b5cf6",
     desc: "View & manage",
+    roles: ["admin"],
   },
   {
     href: "/dashboard/lookup",
@@ -39,6 +55,7 @@ const navItems = [
     icon: Search,
     color: "#f59e0b",
     desc: "Find by number",
+    roles: ["admin"],
   },
   {
     href: "/dashboard/catalog",
@@ -46,6 +63,7 @@ const navItems = [
     icon: Boxes,
     color: "#06b6d4",
     desc: "Manage products",
+    roles: ["developer"],
   },
 ];
 
@@ -54,11 +72,40 @@ interface SidebarProps { onClose?: () => void; }
 export function Sidebar({ onClose }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const [role, setRole] = useState<Role>("admin");
+
+  useEffect(() => {
+    const supabase = createClient();
+    supabase.auth.getSession().then(({ data }) => {
+      const user = data.session?.user;
+      if (user?.user_metadata?.is_developer && !user?.user_metadata?.is_admin) {
+        setRole("developer");
+      } else {
+        setRole("admin");
+      }
+    });
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      const user = session?.user;
+      if (user?.user_metadata?.is_developer && !user?.user_metadata?.is_admin) {
+        setRole("developer");
+      } else {
+        setRole("admin");
+      }
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const visibleNavItems = useMemo(
+    () => navItems.filter((item) => item.roles.includes(role)),
+    [role]
+  );
 
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/admin");
+    router.push(role === "developer" ? "/developer" : "/admin");
     router.refresh();
   }
 
@@ -93,7 +140,9 @@ export function Sidebar({ onClose }: SidebarProps) {
                   className="w-1.5 h-1.5 rounded-full animate-pulse"
                   style={{ background: "#10b981", boxShadow: "0 0 4px #10b981" }}
                 />
-                <p className="text-[10px] text-white/40 font-semibold tracking-wide">Admin Portal</p>
+                <p className="text-[10px] text-white/40 font-semibold tracking-wide">
+                  {role === "developer" ? "Developer Portal" : "Admin Portal"}
+                </p>
               </div>
             </div>
           </Link>
@@ -112,7 +161,7 @@ export function Sidebar({ onClose }: SidebarProps) {
       <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
         <p className="text-[9px] font-black text-white/20 uppercase tracking-[0.2em] px-3 pb-3">Navigation</p>
 
-        {navItems.map(({ href, label, icon: Icon, exact, color, desc }) => {
+        {visibleNavItems.map(({ href, label, icon: Icon, exact, color, desc }) => {
           const isActive = exact ? pathname === href : pathname.startsWith(href);
           return (
             <Link

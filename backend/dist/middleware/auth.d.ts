@@ -4,4 +4,6 @@ export interface AuthenticatedRequest extends Request {
     userEmail?: string;
 }
 export declare function requireAuth(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
+export declare function requireStaff(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
+export declare function requireDeveloper(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void>;
 //# sourceMappingURL=auth.d.ts.map

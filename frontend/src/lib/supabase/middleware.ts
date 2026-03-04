@@ -1,4 +1,5 @@
 import { createServerClient } from "@supabase/ssr";
+import type { User } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function updateSession(request: NextRequest) {
@@ -32,7 +33,7 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  let user: any = null;
+  let user: User | null = null;
   try {
     const {
       data: { user: fetchedUser },
@@ -45,6 +46,8 @@ export async function updateSession(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const isDashboard = pathname.startsWith("/dashboard");
   const isAdminPage = pathname === "/admin";
+  const isDeveloperPage = pathname === "/developer";
+  const isCatalogPage = pathname.startsWith("/dashboard/catalog");
   const isOldAuthPage = pathname.startsWith("/login") || pathname.startsWith("/signup");
 
   // Redirect old auth URLs to /admin
@@ -54,16 +57,27 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // Protect dashboard — must be logged-in admin
+  // Protect dashboard routes.
   if (isDashboard) {
     if (!user) {
       const url = request.nextUrl.clone();
       url.pathname = "/admin";
       return NextResponse.redirect(url);
     }
-    if (!user.user_metadata?.is_admin) {
+
+    const isAdmin = user.user_metadata?.is_admin === true;
+    const isDeveloper = user.user_metadata?.is_developer === true;
+
+    // Catalog page is developer-only.
+    if (isCatalogPage) {
+      if (!isDeveloper) {
+        const url = request.nextUrl.clone();
+        url.pathname = isAdmin ? "/dashboard" : "/developer";
+        return NextResponse.redirect(url);
+      }
+    } else if (!isAdmin) {
       const url = request.nextUrl.clone();
-      url.pathname = "/admin";
+      url.pathname = isDeveloper ? "/dashboard/catalog" : "/admin";
       return NextResponse.redirect(url);
     }
   }
@@ -72,6 +86,13 @@ export async function updateSession(request: NextRequest) {
   if (isAdminPage && user?.user_metadata?.is_admin) {
     const url = request.nextUrl.clone();
     url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
+
+  // If developer is already logged in, skip the developer auth page
+  if (isDeveloperPage && user?.user_metadata?.is_developer) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard/catalog";
     return NextResponse.redirect(url);
   }
 

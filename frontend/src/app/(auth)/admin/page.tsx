@@ -2,10 +2,10 @@ import type { Metadata } from "next";
 import { AdminAuthForm } from "@/components/auth/admin-auth-form";
 
 export const metadata: Metadata = {
-  title: "Developer Portal",
-  description: "AJ Fresh Foods developer access",
+  title: "Admin Portal",
+  description: "AJ Fresh Foods admin access",
 };
 
 export default function AdminPage() {
-  return <AdminAuthForm />;
+  return <AdminAuthForm portalType="admin" />;
 }

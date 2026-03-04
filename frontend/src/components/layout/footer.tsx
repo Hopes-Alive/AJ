@@ -206,9 +206,16 @@ export function Footer() {
         </div>
 
         {showDeveloperAccess && (
-          <div className="pb-6 flex justify-center">
+          <div className="pb-6 flex justify-center gap-3 flex-wrap">
             <Link
               href="/admin"
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Admin Login / Sign Up
+            </Link>
+            <Link
+              href="/developer"
               className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
             >
               <ShieldCheck className="h-3.5 w-3.5" />

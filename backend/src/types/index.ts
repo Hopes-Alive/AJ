@@ -56,6 +56,8 @@ export interface CatalogProduct {
   pack?: string;
   price?: string;
   image?: string;
+  imageSource?: "codebase" | "uploaded";
+  imageStoragePath?: string;
 }
 
 export interface CatalogGroup {

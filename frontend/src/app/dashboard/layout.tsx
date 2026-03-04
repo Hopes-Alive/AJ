@@ -13,7 +13,10 @@ export default async function DashboardLayout({
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user || !user.user_metadata?.is_admin) {
+  const isAdmin = user?.user_metadata?.is_admin === true;
+  const isDeveloper = user?.user_metadata?.is_developer === true;
+
+  if (!user || (!isAdmin && !isDeveloper)) {
     redirect("/admin");
   }
 

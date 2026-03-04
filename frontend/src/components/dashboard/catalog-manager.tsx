@@ -3,8 +3,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Category } from "@/types";
 import { categories as fallbackCategories } from "@/data/products";
-import { getCatalog, saveCatalog } from "@/lib/api/catalog";
-import { Plus, Trash2, Save, Loader2 } from "lucide-react";
+import {
+  deleteCatalogImage,
+  getCatalog,
+  saveCatalog,
+  uploadCatalogImage,
+} from "@/lib/api/catalog";
+import { Plus, Trash2, Save, Loader2, Upload, ImageMinus } from "lucide-react";
 
 function deepCloneCategories(source: Category[]): Category[] {
   return JSON.parse(JSON.stringify(source)) as Category[];
@@ -25,6 +30,7 @@ export function CatalogManager() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [uploadingImageKey, setUploadingImageKey] = useState<string | null>(null);
 
   const [activeCategoryId, setActiveCategoryId] = useState<string>("");
   const [activeGroupId, setActiveGroupId] = useState<string>("");
@@ -177,6 +183,98 @@ export function CatalogManager() {
           : g
       ),
     }));
+  }
+
+  function getProductKey(index: number): string | null {
+    if (!activeCategory || !activeGroup) return null;
+    return `${activeCategory.id}:${activeGroup.id}:${index}`;
+  }
+
+  function isCodebaseImage(image?: string): boolean {
+    return Boolean(image && image.startsWith("/images/"));
+  }
+
+  async function handleUploadProductImage(index: number, file: File) {
+    if (!activeGroup) return;
+    const key = getProductKey(index);
+    if (!key) return;
+
+    setUploadingImageKey(key);
+    setError(null);
+    setMessage(null);
+
+    try {
+      const uploaded = await uploadCatalogImage(file);
+      updateCategory((cat) => ({
+        ...cat,
+        groups: cat.groups.map((g) =>
+          g.id === activeGroup.id
+            ? {
+                ...g,
+                products: g.products.map((p, i) =>
+                  i === index
+                    ? {
+                        ...p,
+                        image: uploaded.imageUrl,
+                        imageSource: "uploaded",
+                        imageStoragePath: uploaded.storagePath,
+                      }
+                    : p
+                ),
+              }
+            : g
+        ),
+      }));
+      setMessage("Image uploaded.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload image");
+    } finally {
+      setUploadingImageKey(null);
+    }
+  }
+
+  async function handleDeleteProductImage(index: number) {
+    if (!activeGroup) return;
+    const product = activeGroup.products[index];
+    if (!product?.image) return;
+
+    setError(null);
+    setMessage(null);
+
+    try {
+      if (product.imageSource === "uploaded" && product.imageStoragePath) {
+        await deleteCatalogImage(product.imageStoragePath);
+      }
+
+      updateCategory((cat) => ({
+        ...cat,
+        groups: cat.groups.map((g) =>
+          g.id === activeGroup.id
+            ? {
+                ...g,
+                products: g.products.map((p, i) =>
+                  i === index
+                    ? {
+                        ...p,
+                        image: "",
+                        imageSource: undefined,
+                        imageStoragePath: undefined,
+                      }
+                    : p
+                ),
+              }
+            : g
+        ),
+      }));
+
+      setMessage(
+        product.imageSource === "uploaded"
+          ? "Uploaded image deleted from storage."
+          : "Codebase image reference removed from catalog."
+      );
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to delete image");
+    }
   }
 
   async function handleSave() {
@@ -448,7 +546,7 @@ export function CatalogManager() {
                     {activeGroup.products.map((product, index) => (
                       <div
                         key={`${product.name}-${index}`}
-                        className="grid gap-2 sm:grid-cols-[1.2fr_1fr_1fr_1.5fr_auto] rounded-lg border border-border p-2"
+                        className="grid gap-2 sm:grid-cols-[1.2fr_1fr_1fr_1.6fr_auto] rounded-lg border border-border p-2"
                       >
                         <input
                           value={product.name}
@@ -474,14 +572,51 @@ export function CatalogManager() {
                           placeholder="Price"
                           className="rounded-md border border-border bg-background px-2 py-1.5 text-sm"
                         />
-                        <input
-                          value={product.image ?? ""}
-                          onChange={(e) =>
-                            updateProductField(index, "image", e.target.value)
-                          }
-                          placeholder="Image URL/path (empty = no image)"
-                          className="rounded-md border border-border bg-background px-2 py-1.5 text-sm"
-                        />
+                        <div className="rounded-md border border-border bg-background px-2 py-1.5 text-xs space-y-2">
+                          <div className="text-muted-foreground truncate">
+                            {product.image
+                              ? product.imageSource === "uploaded"
+                                ? "Uploaded image"
+                                : isCodebaseImage(product.image)
+                                  ? "Codebase image"
+                                  : "Image set"
+                              : "No image"}
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            <label className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 cursor-pointer hover:bg-muted">
+                              <Upload className="h-3 w-3" />
+                              Upload
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) {
+                                    void handleUploadProductImage(index, file);
+                                  }
+                                  e.currentTarget.value = "";
+                                }}
+                              />
+                            </label>
+                            {product.image && (
+                              <button
+                                type="button"
+                                onClick={() => void handleDeleteProductImage(index)}
+                                className="inline-flex items-center gap-1 rounded-md border border-destructive/30 text-destructive px-2 py-1"
+                              >
+                                <ImageMinus className="h-3 w-3" />
+                                Delete
+                              </button>
+                            )}
+                          </div>
+                          {uploadingImageKey === getProductKey(index) && (
+                            <div className="inline-flex items-center gap-1 text-primary">
+                              <Loader2 className="h-3 w-3 animate-spin" />
+                              Uploading...
+                            </div>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={() => removeProduct(index)}
