@@ -13,6 +13,7 @@ import {
   Wrench,
   MessageSquare,
   Phone,
+  ShieldCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
@@ -23,6 +24,7 @@ const navItems = [
   { href: "/products", label: "Products", icon: Package },
   { href: "/services", label: "Services", icon: Wrench },
   { href: "/contact", label: "Contact", icon: MessageSquare },
+  { href: "/admin", label: "Admin", icon: ShieldCheck },
 ];
 
 export function Header() {
