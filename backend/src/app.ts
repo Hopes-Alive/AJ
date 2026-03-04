@@ -4,7 +4,8 @@ import cors from "cors";
 import apiRouter from "./routes";
 
 const app = express();
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:3000";
+const configuredFrontendUrls =
+  process.env.FRONTEND_URL?.split(",").map((url) => url.trim()).filter(Boolean) ?? [];
 
 app.use(
   cors({
@@ -12,7 +13,15 @@ app.use(
       // Allow requests with no origin (mobile apps, curl, etc.)
       if (!origin) return callback(null, true);
       // Allow any localhost origin in development
-      if (origin.startsWith("http://localhost:") || origin === FRONTEND_URL) {
+      if (origin.startsWith("http://localhost:")) {
+        return callback(null, true);
+      }
+      // Allow explicitly configured production frontend URLs.
+      if (configuredFrontendUrls.includes(origin)) {
+        return callback(null, true);
+      }
+      // Allow Vercel preview and production domains.
+      if (origin.endsWith(".vercel.app")) {
         return callback(null, true);
       }
       callback(new Error("Not allowed by CORS"));
