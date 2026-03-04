@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ShoppingCart, ClipboardList, Search, ArrowRight } from "lucide-react";
+import { ShoppingCart, ClipboardList, Search, ArrowRight, Boxes } from "lucide-react";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 
 export default async function DashboardPage() {
@@ -88,6 +88,16 @@ export default async function DashboardPage() {
             bg: "oklch(0.52 0.2 300 / 0.07)",
             border: "oklch(0.52 0.2 300 / 0.2)",
             glow: "oklch(0.52 0.2 300 / 0.1)",
+          },
+          {
+            href: "/dashboard/catalog",
+            icon: Boxes,
+            title: "Catalog Manager",
+            desc: "Add or update products and images",
+            color: "#06b6d4",
+            bg: "oklch(0.62 0.12 220 / 0.07)",
+            border: "oklch(0.62 0.12 220 / 0.2)",
+            glow: "oklch(0.62 0.12 220 / 0.1)",
           },
         ].map(({ href, icon: Icon, title, desc, color, bg, border, glow }) => (
           <Link

@@ -102,7 +102,7 @@ export function AdminAuthForm() {
 
     if (!data.user?.user_metadata?.is_admin) {
       await supabase.auth.signOut();
-      setError("Access denied. This portal is for administrators only.");
+      setError("Access denied. This portal is for developers only.");
       setSubmitting(false);
       return;
     }
@@ -257,8 +257,8 @@ export function AdminAuthForm() {
                 </h2>
                 <p className="text-muted-foreground text-sm mt-2 leading-relaxed">
                   {mode === "register"
-                    ? "Create the administrator account to start managing orders."
-                    : "Sign in to your admin dashboard to manage orders and pricing."}
+                    ? "Create the developer account to start managing products and orders."
+                    : "Sign in to your developer dashboard to manage products and orders."}
                 </p>
               </div>
 
@@ -354,7 +354,7 @@ export function AdminAuthForm() {
                   )}
                   {submitting
                     ? mode === "register" ? "Creating account…" : "Signing in…"
-                    : mode === "register" ? "Create admin account" : "Sign in to dashboard"}
+                    : mode === "register" ? "Create developer account" : "Sign in to dashboard"}
                   {!submitting && (
                     <ArrowRight className="h-4 w-4 ml-auto transition-transform group-hover:translate-x-0.5" />
                   )}
@@ -365,7 +365,7 @@ export function AdminAuthForm() {
               <div className="mt-8 pt-6 border-t border-border/50 flex items-center justify-center gap-2">
                 <ShieldCheck className="h-3.5 w-3.5 text-muted-foreground/40" />
                 <p className="text-xs text-muted-foreground/50 text-center">
-                  Restricted to authorised administrators only
+                  Restricted to authorised developers only
                 </p>
               </div>
             </>

@@ -1,16 +1,17 @@
 "use client";
 
 import {
-  useState, useMemo, useRef, useEffect, useCallback,
+  useState, useMemo, useRef, useEffect,
 } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { categories } from "@/data/products";
+import { categories as fallbackCategories } from "@/data/products";
 import { createOrder, type OrderItem } from "@/lib/api/orders";
+import { getCatalog } from "@/lib/api/catalog";
 import {
   ShoppingCart, Plus, Minus, Trash2, Search,
   Loader2, CheckCircle2, MapPin, FileText, Tag,
-  ClipboardEdit, PencilLine, Package, ChevronRight,
+  ClipboardEdit, PencilLine, Package,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -59,11 +60,9 @@ function ImageZoomModal({ src, alt, onClose }: { src: string; alt: string; onClo
 }
 
 function ProductCard({
-  groupId, groupName, product, defaultPack, defaultPrice, cartItem,
+  product, defaultPack, defaultPrice, cartItem,
   onAdd, onQtyChange, onSetQty, onSetPrice,
 }: {
-  groupId: string;
-  groupName: string;
   product: { name: string; image?: string; pack?: string; price?: string };
   defaultPack?: string;
   defaultPrice?: string;
@@ -321,9 +320,10 @@ export function NewOrderForm() {
   const router = useRouter();
 
   /* state */
+  const [catalog, setCatalog] = useState(fallbackCategories);
   const [orderName, setOrderName] = useState("");
   const [search, setSearch] = useState("");
-  const [activeCat, setActiveCat] = useState(categories[0]?.id ?? "");
+  const [activeCat, setActiveCat] = useState(fallbackCategories[0]?.id ?? "");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [notes, setNotes] = useState("");
@@ -332,6 +332,24 @@ export function NewOrderForm() {
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<{ orderNumber: string; orderName: string; placedAt: string } | null>(null);
   const [showCartMobile, setShowCartMobile] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+    getCatalog()
+      .then((data) => {
+        if (!mounted || data.length === 0) return;
+        setCatalog(data);
+        setActiveCat((current) =>
+          data.some((cat) => cat.id === current) ? current : data[0].id
+        );
+      })
+      .catch(() => {
+        // Keep fallback catalogue if backend is unavailable.
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   /* refs */
   const tabBarRef = useRef<HTMLDivElement>(null);
@@ -342,9 +360,9 @@ export function NewOrderForm() {
 
   /* filtered categories */
   const displayCategories = useMemo(() => {
-    if (!search.trim()) return categories;
+    if (!search.trim()) return catalog;
     const q = search.toLowerCase();
-    return categories.map(cat => ({
+    return catalog.map(cat => ({
       ...cat,
       groups: cat.groups.map(grp => ({
         ...grp,
@@ -355,7 +373,7 @@ export function NewOrderForm() {
         ),
       })).filter(g => g.products.length > 0),
     })).filter(c => c.groups.length > 0);
-  }, [search]);
+  }, [catalog, search]);
 
   /* scrollspy — listen to window scroll, highlight active tab */
   useEffect(() => {
@@ -395,8 +413,6 @@ export function NewOrderForm() {
   }
 
   /* cart helpers */
-  function getCartItem(key: string) { return cart.find(i => i.cartKey === key); }
-
   function addToCart(groupId: string, groupName: string, product: { name: string; pack?: string; price?: string }, defaultPack?: string, defaultPrice?: string, initialQty = 1) {
     const key = cartKey(groupId, product.name);
     const priceStr = product.price ?? defaultPrice ?? "0";
@@ -875,8 +891,6 @@ export function NewOrderForm() {
                         return (
                           <ProductCard
                             key={reactKey}
-                            groupId={group.id}
-                            groupName={group.name}
                             product={product}
                             defaultPack={group.defaultPack}
                             defaultPrice={group.defaultPrice}

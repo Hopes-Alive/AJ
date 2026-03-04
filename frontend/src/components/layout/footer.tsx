@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import { navLinks } from "@/data/navigation";
-import { Mail, Phone, MapPin, Clock, ArrowUpRight, ArrowRight } from "lucide-react";
+import { Mail, Phone, MapPin, Clock, ArrowUpRight, ArrowRight, ShieldCheck } from "lucide-react";
 
 const hours = [
   { day: "Mon – Fri", time: "7 am – 6 pm", open: true },
@@ -20,6 +21,9 @@ const contactLinks = [
 ];
 
 export function Footer() {
+  const pathname = usePathname();
+  const showDeveloperAccess = pathname === "/contact";
+
   return (
     <footer className="relative overflow-hidden">
       {/* Gradient accent bar */}
@@ -200,6 +204,18 @@ export function Footer() {
             </Link>
           </div>
         </div>
+
+        {showDeveloperAccess && (
+          <div className="pb-6 flex justify-center">
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-xs text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+            >
+              <ShieldCheck className="h-3.5 w-3.5" />
+              Developer Login / Sign Up
+            </Link>
+          </div>
+        )}
       </div>
     </footer>
   );

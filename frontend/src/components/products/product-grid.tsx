@@ -8,9 +8,10 @@ import {
   Soup, ChefHat, Candy, Droplets, Home, Package,
   Layers, ChevronRight, ChevronDown, X,
 } from "lucide-react";
-import { categories } from "@/data/products";
-import { ProductGroup, Product } from "@/types";
+import { categories as fallbackCategories } from "@/data/products";
+import { ProductGroup, Product, Category } from "@/types";
 import { ProductCard } from "./product-card";
+import { getCatalog } from "@/lib/api/catalog";
 
 const iconMap: Record<string, React.ElementType> = {
   "glass-water": GlassWater,
@@ -43,9 +44,12 @@ const categoryHues: Record<string, number> = {
 };
 
 export function ProductCatalog() {
-  const [activeCategoryId, setActiveCategoryId] = useState(categories[0].id);
+  const [catalog, setCatalog] = useState<Category[]>(fallbackCategories);
+  const [activeCategoryId, setActiveCategoryId] = useState(
+    fallbackCategories[0]?.id ?? ""
+  );
   const [lightboxProduct, setLightboxProduct] = useState<Product | null>(null);
-  const activeCategory = categories.find((c) => c.id === activeCategoryId)!;
+  const activeCategory = catalog.find((c) => c.id === activeCategoryId) ?? catalog[0];
   const activeHue = categoryHues[activeCategoryId] ?? 176;
   const contentRef = useRef<HTMLDivElement>(null);
   const pillsRef = useRef<HTMLDivElement>(null);
@@ -54,6 +58,25 @@ export function ProductCatalog() {
     setActiveCategoryId(id);
     contentRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
+
+  useEffect(() => {
+    let mounted = true;
+    getCatalog()
+      .then((data) => {
+        if (!mounted || data.length === 0) return;
+        setCatalog(data);
+        setActiveCategoryId((current) =>
+          data.some((cat) => cat.id === current) ? current : data[0].id
+        );
+      })
+      .catch(() => {
+        // Keep fallback catalogue if API is unavailable.
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!pillsRef.current) return;
@@ -69,6 +92,10 @@ export function ProductCatalog() {
     }
   }, [activeCategoryId]);
 
+  if (!activeCategory) {
+    return null;
+  }
+
   return (
     <div>
       {/* ── Horizontal Category Strip (Mobile + Tablet) — outside flex row ── */}
@@ -78,7 +105,7 @@ export function ProductCatalog() {
             ref={pillsRef}
             className="flex gap-2 px-3 sm:px-5 py-2 sm:py-2.5 overflow-x-auto no-scrollbar"
           >
-            {categories.map((cat) => {
+            {catalog.map((cat) => {
               const isActive = cat.id === activeCategoryId;
               const catHue = categoryHues[cat.id] ?? 176;
               const Icon = iconMap[cat.icon] || GlassWater;
@@ -117,6 +144,7 @@ export function ProductCatalog() {
         <div className="hidden lg:block w-60 shrink-0">
           <div className="sticky top-24">
             <SidebarNav
+              categories={catalog}
               activeCategoryId={activeCategoryId}
               onSelect={handleCategoryChange}
             />
@@ -550,9 +578,11 @@ function ProductLightbox({
    ═══════════════════════════════════════════════════ */
 
 function SidebarNav({
+  categories,
   activeCategoryId,
   onSelect,
 }: {
+  categories: Category[];
   activeCategoryId: string;
   onSelect: (id: string) => void;
 }) {

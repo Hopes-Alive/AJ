@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Menu, LayoutDashboard, ShoppingCart, ClipboardList, Search } from "lucide-react";
+import { Menu, LayoutDashboard, ShoppingCart, ClipboardList, Search, Boxes } from "lucide-react";
 import { Sidebar } from "./sidebar";
 import { usePathname } from "next/navigation";
 
@@ -10,6 +10,7 @@ const PAGE_META: Record<string, { label: string; icon: typeof LayoutDashboard }>
   "/dashboard/new-order": { label: "New Order",    icon: ShoppingCart },
   "/dashboard/orders":    { label: "My Orders",    icon: ClipboardList },
   "/dashboard/lookup":    { label: "Order Lookup", icon: Search },
+  "/dashboard/catalog":   { label: "Catalog",      icon: Boxes },
 };
 
 interface DashboardHeaderProps {

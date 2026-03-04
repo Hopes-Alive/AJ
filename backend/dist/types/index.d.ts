@@ -39,4 +39,25 @@ export interface ApiResponse<T = unknown> {
     error?: string;
     message?: string;
 }
+export interface CatalogProduct {
+    name: string;
+    pack?: string;
+    price?: string;
+    image?: string;
+}
+export interface CatalogGroup {
+    id: string;
+    name: string;
+    features?: string;
+    defaultPack?: string;
+    defaultPrice?: string;
+    products: CatalogProduct[];
+}
+export interface CatalogCategory {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+    groups: CatalogGroup[];
+}
 //# sourceMappingURL=index.d.ts.map

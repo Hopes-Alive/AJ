@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const supabase_1 = require("../lib/supabase");
 const router = (0, express_1.Router)();
-// GET /api/admin/status — public, checks if an admin account exists yet
+// GET /api/admin/status — public, checks if a developer account exists yet
 router.get("/status", async (_req, res) => {
     const { data, error } = await supabase_1.supabaseAdmin.auth.admin.listUsers();
     if (error) {
@@ -18,7 +18,7 @@ router.get("/status", async (_req, res) => {
     };
     res.json(response);
 });
-// POST /api/admin/register — creates the admin account via service role (bypasses email confirmation)
+// POST /api/admin/register — creates the developer account via service role (bypasses email confirmation)
 router.post("/register", async (req, res) => {
     const { email, password, fullName } = req.body;
     if (!email || !password || !fullName) {
@@ -26,11 +26,11 @@ router.post("/register", async (req, res) => {
         res.status(400).json(response);
         return;
     }
-    // Refuse if an admin already exists
+    // Refuse if a developer account already exists
     const { data: existing } = await supabase_1.supabaseAdmin.auth.admin.listUsers();
     const adminAlreadyExists = existing?.users.some((u) => u.user_metadata?.is_admin === true);
     if (adminAlreadyExists) {
-        const response = { success: false, error: "An admin account already exists" };
+        const response = { success: false, error: "A developer account already exists" };
         res.status(409).json(response);
         return;
     }
@@ -46,7 +46,7 @@ router.post("/register", async (req, res) => {
         res.status(500).json(response);
         return;
     }
-    const response = { success: true, message: "Admin account created" };
+    const response = { success: true, message: "Developer account created" };
     res.status(201).json(response);
 });
 exports.default = router;

@@ -6,7 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import {
   LayoutDashboard, ShoppingCart, ClipboardList, Search,
-  LogOut, X, ChevronRight,
+  LogOut, X, ChevronRight, Boxes,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +39,13 @@ const navItems = [
     icon: Search,
     color: "#f59e0b",
     desc: "Find by number",
+  },
+  {
+    href: "/dashboard/catalog",
+    label: "Catalog",
+    icon: Boxes,
+    color: "#06b6d4",
+    desc: "Manage products",
   },
 ];
 
