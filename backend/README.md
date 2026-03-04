@@ -85,3 +85,7 @@ All endpoints require `Authorization: Bearer <supabase_access_token>` header.
 | GET | `/api/orders/:id` | Get order by UUID |
 | GET | `/api/orders/lookup/:orderNumber` | Look up order by order number (e.g. AJ-2024-0001) |
 | PATCH | `/api/orders/:id/cancel` | Cancel a pending order |
+
+## Repo Notes
+
+- Backend README touched for coordinated frontend/backend remote sync update.
