@@ -385,11 +385,19 @@ export function ContactContent() {
                           <stop offset="100%" stopColor="oklch(0.45 0.1 192)" stopOpacity="0.3" />
                         </linearGradient>
                       </defs>
+                      {/* Mainland Australia (more realistic outline) */}
                       <path
-                        d="M130,30 L155,25 L180,30 L195,20 L220,28 L240,35 L265,25 L290,30 L310,22 L330,30 L350,45 L360,65 L365,90 L355,115 L360,140 L370,165 L365,190 L355,210 L340,225 L320,240 L300,250 L280,260 L265,275 L250,285 L235,280 L220,270 L200,275 L185,285 L170,280 L155,270 L140,280 L120,275 L100,265 L85,250 L75,235 L65,215 L60,195 L55,175 L50,155 L55,135 L65,115 L75,100 L85,85 L95,70 L105,55 L115,40 Z"
+                        d="M64 147 L74 117 L93 92 L122 69 L153 57 L177 42 L204 45 L222 36 L252 42 L281 51 L305 44 L327 53 L352 73 L365 99 L370 124 L359 147 L364 171 L356 193 L338 212 L319 225 L298 236 L282 247 L263 258 L243 276 L224 291 L205 296 L188 288 L171 289 L157 299 L139 294 L126 282 L108 286 L92 279 L79 266 L68 248 L59 232 L54 214 L50 195 L48 176 L53 161 Z"
                         fill="url(#ausGrad)"
                         stroke="url(#ausStroke)"
                         strokeWidth="1.5"
+                      />
+                      {/* Tasmania */}
+                      <path
+                        d="M251 307 L260 313 L260 323 L250 329 L238 325 L236 315 Z"
+                        fill="url(#ausGrad)"
+                        stroke="url(#ausStroke)"
+                        strokeWidth="1.4"
                       />
                     </svg>
 
