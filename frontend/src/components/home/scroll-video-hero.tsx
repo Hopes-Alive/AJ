@@ -110,7 +110,10 @@ function sceneOpacity(scene: (typeof SCENES)[number], progress: number): number 
   if (progress < scene.from || progress > scene.to) return 0;
   const intoScene = progress - scene.from;
   const remaining = scene.to - progress;
-  return Math.min(1, intoScene / fadeDur, remaining / fadeDur);
+  // Keep the first scene visible at page load (progress = 0).
+  const fadeIn = scene.from === 0 ? 1 : Math.min(1, intoScene / fadeDur);
+  const fadeOut = Math.min(1, remaining / fadeDur);
+  return Math.min(fadeIn, fadeOut);
 }
 
 export function ScrollVideoHero() {

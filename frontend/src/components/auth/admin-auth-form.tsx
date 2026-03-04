@@ -50,10 +50,17 @@ export function AdminAuthForm() {
     async function checkAdminStatus() {
       try {
         const res = await fetch(`${BACKEND_URL}/api/admin/status`);
+        if (!res.ok) {
+          throw new Error("Failed to fetch account status");
+        }
         const json = await res.json();
         setMode(json.data?.registered ? "login" : "register");
       } catch {
-        setMode("login");
+        // Safe default: show first-time setup when status cannot be verified.
+        setMode("register");
+        setError(
+          "Could not verify developer account status. You can proceed with first-time setup."
+        );
       }
     }
     checkAdminStatus();
