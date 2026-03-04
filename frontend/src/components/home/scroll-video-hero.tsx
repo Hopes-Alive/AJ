@@ -6,7 +6,7 @@ import Image from "next/image";
 import { ArrowRight, Phone } from "lucide-react";
 
 const TOTAL_FRAMES = 240;
-const FRAMES_DIR = "/ezgif-7abfd73abb14409e-jpg";
+const FRAMES_DIR = "/animation";
 
 function frameUrl(index: number) {
   return `${FRAMES_DIR}/ezgif-frame-${String(index + 1).padStart(3, "0")}.jpg`;
