@@ -24,7 +24,6 @@ const navItems = [
   { href: "/products", label: "Products", icon: Package },
   { href: "/services", label: "Services", icon: Wrench },
   { href: "/contact", label: "Contact", icon: MessageSquare },
-  { href: "/admin", label: "Admin", icon: ShieldCheck },
 ];
 
 export function Header() {
@@ -133,6 +132,25 @@ export function Header() {
               {/* ─── Right side ─── */}
               <div className="flex items-center gap-2">
                 <ModeToggle />
+
+                <Link
+                  href="/admin"
+                  className="hidden lg:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
+                  style={{
+                    background:
+                      "linear-gradient(145deg, oklch(0.52 0.12 176), oklch(0.44 0.11 190))",
+                    boxShadow: [
+                      "0 2px 8px oklch(0.52 0.12 176 / 0.35)",
+                      "0 8px 20px oklch(0.52 0.12 176 / 0.22)",
+                      "inset 0 1px 0 oklch(1 0 0 / 0.18)",
+                      "inset 0 -1px 0 oklch(0 0 0 / 0.16)",
+                    ].join(", "),
+                    transform: "translateZ(0)",
+                  }}
+                >
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Admin
+                </Link>
 
                 <Link
                   href="/contact"
@@ -310,6 +328,32 @@ export function Header() {
                     </p>
                   </div>
                 </a>
+
+                <Link
+                  href="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl mb-2 text-primary-foreground transition-all duration-200"
+                  style={{
+                    background:
+                      "linear-gradient(145deg, oklch(0.52 0.12 176), oklch(0.44 0.11 190))",
+                    boxShadow: [
+                      "0 2px 8px oklch(0.52 0.12 176 / 0.35)",
+                      "0 8px 20px oklch(0.52 0.12 176 / 0.22)",
+                      "inset 0 1px 0 oklch(1 0 0 / 0.18)",
+                      "inset 0 -1px 0 oklch(0 0 0 / 0.16)",
+                    ].join(", "),
+                  }}
+                >
+                  <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold">Admin Portal</p>
+                    <p className="text-[10px] text-white/75">
+                      Administrator access
+                    </p>
+                  </div>
+                </Link>
 
                 <Link
                   href="/contact"
