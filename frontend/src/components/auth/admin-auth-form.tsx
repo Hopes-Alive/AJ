@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/client";
+import { BACKEND_BASE_URL } from "@/lib/api/base-url";
 import {
   Loader2,
   Mail,
@@ -18,8 +19,7 @@ import {
   Package2,
 } from "lucide-react";
 
-const BACKEND_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const BACKEND_URL = BACKEND_BASE_URL;
 
 type Mode = "loading" | "register" | "login";
 
@@ -70,52 +70,53 @@ export function AdminAuthForm() {
     e.preventDefault();
     setSubmitting(true);
     setError(null);
+    try {
+      const supabase = createClient();
 
-    const supabase = createClient();
+      if (mode === "register") {
+        const res = await fetch(`${BACKEND_URL}/api/admin/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, fullName }),
+        });
+        const json = await res.json().catch(() => null);
 
-    if (mode === "register") {
-      const res = await fetch(`${BACKEND_URL}/api/admin/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, fullName }),
-      });
-      const json = await res.json();
+        if (!res.ok || !json?.success) {
+          setError(json?.error || "Failed to create account");
+          return;
+        }
 
-      if (!json.success) {
-        setError(json.error || "Failed to create account");
-        setSubmitting(false);
+        const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+        if (signInError) {
+          setError(signInError.message);
+          return;
+        }
+
+        router.push("/dashboard");
+        router.refresh();
         return;
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+
       if (signInError) {
-        setError(signInError.message);
-        setSubmitting(false);
+        setError("Invalid email or password");
+        return;
+      }
+
+      if (!data.user?.user_metadata?.is_admin) {
+        await supabase.auth.signOut();
+        setError("Access denied. This portal is for developers only.");
         return;
       }
 
       router.push("/dashboard");
       router.refresh();
-      return;
-    }
-
-    const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-
-    if (signInError) {
-      setError("Invalid email or password");
+    } catch {
+      setError("Something went wrong. Please try again.");
+    } finally {
       setSubmitting(false);
-      return;
     }
-
-    if (!data.user?.user_metadata?.is_admin) {
-      await supabase.auth.signOut();
-      setError("Access denied. This portal is for developers only.");
-      setSubmitting(false);
-      return;
-    }
-
-    router.push("/dashboard");
-    router.refresh();
   }
 
   return (

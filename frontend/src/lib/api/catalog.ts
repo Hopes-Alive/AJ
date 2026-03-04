@@ -2,8 +2,9 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { Category } from "@/types";
+import { BACKEND_BASE_URL } from "@/lib/api/base-url";
 
-const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:4000";
+const API_BASE = BACKEND_BASE_URL;
 
 async function getAuthHeader(): Promise<Record<string, string>> {
   const supabase = createClient();
