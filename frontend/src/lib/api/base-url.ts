@@ -11,7 +11,12 @@ function normalizeBaseUrl(value?: string): string {
   if (withoutTrailingSlash.startsWith("//")) {
     return `https:${withoutTrailingSlash}`;
   }
-  return `https://${withoutTrailingSlash}`;
+
+  // Handle accidental leading slash values like "/my-backend.vercel.app".
+  const withoutLeadingSlash = withoutTrailingSlash.replace(/^\/+/, "");
+  if (!withoutLeadingSlash) return LOCAL_BACKEND_FALLBACK;
+
+  return `https://${withoutLeadingSlash}`;
 }
 
 export const BACKEND_BASE_URL = normalizeBaseUrl(
