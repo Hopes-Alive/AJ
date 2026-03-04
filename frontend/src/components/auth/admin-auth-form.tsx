@@ -86,18 +86,26 @@ export function AdminAuthForm({ portalType = "admin" }: AdminAuthFormProps) {
 
   useEffect(() => {
     async function checkAdminStatus() {
+      setMode("loading");
+      setError(null);
       try {
-        const res = await fetch(`${BACKEND_URL}/api/${portalApiPath}/status`);
+        const res = await fetch(`${BACKEND_URL}/api/${portalApiPath}/status`, {
+          cache: "no-store",
+          headers: {
+            "Cache-Control": "no-store",
+            Pragma: "no-cache",
+          },
+        });
         if (!res.ok) {
           throw new Error("Failed to fetch account status");
         }
         const json = await res.json();
         setMode(json.data?.registered ? "login" : "register");
       } catch {
-        // Safe default: show first-time setup when status cannot be verified.
-        setMode("register");
+        // Safe default: keep login mode until backend status is available.
+        setMode("login");
         setError(
-          `Could not verify ${portalLabel.toLowerCase()} account status. You can proceed with first-time setup.`
+          `Could not verify ${portalLabel.toLowerCase()} account status from backend. Please refresh and try again.`
         );
       }
     }
