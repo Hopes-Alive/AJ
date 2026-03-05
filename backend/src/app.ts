@@ -6,6 +6,12 @@ import apiRouter from "./routes";
 const app = express();
 const configuredFrontendUrls =
   process.env.FRONTEND_URL?.split(",").map((url) => url.trim()).filter(Boolean) ?? [];
+const staticAllowedOrigins = [
+  "https://ajfreshfood.com.au",
+  "https://www.ajfreshfood.com.au",
+  "https://ajfresh-git-main-gamisangita7-1406s-projects.vercel.app",
+];
+const allowedOrigins = new Set([...configuredFrontendUrls, ...staticAllowedOrigins]);
 
 app.use(
   cors({
@@ -17,7 +23,7 @@ app.use(
         return callback(null, true);
       }
       // Allow explicitly configured production frontend URLs.
-      if (configuredFrontendUrls.includes(origin)) {
+      if (allowedOrigins.has(origin)) {
         return callback(null, true);
       }
       // Allow Vercel preview and production domains.
