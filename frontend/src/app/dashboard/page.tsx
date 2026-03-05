@@ -33,12 +33,11 @@ export default async function DashboardPage() {
         }}
       >
         <div
-          className="pointer-events-none absolute inset-0 opacity-35"
+          className="pointer-events-none absolute inset-0 opacity-35 transition-transform duration-1000 group-hover:translate-x-[155%]"
           style={{
             backgroundImage:
               "linear-gradient(125deg, transparent 28%, rgba(255,255,255,0.18) 40%, transparent 52%)",
             transform: "translateX(-55%)",
-            transition: "transform 900ms ease",
           }}
         />
 

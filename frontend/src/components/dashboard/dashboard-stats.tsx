@@ -6,6 +6,7 @@ import { categories } from "@/data/products";
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LabelList, Cell,
   PieChart, Pie, PieLabelRenderProps,
+  AreaChart, Area, CartesianGrid,
 } from "recharts";
 import {
   TrendingUp, DollarSign, ShoppingCart, Clock,
@@ -102,6 +103,12 @@ function Sparkline({ values, color }: { values: number[]; color: string }) {
       <polyline points={pts} fill="none" stroke={color} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
+}
+
+function compactCurrency(value: number): string {
+  if (value >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}m`;
+  if (value >= 1_000) return `$${(value / 1_000).toFixed(1)}k`;
+  return `$${value.toFixed(0)}`;
 }
 
 /* ── custom tooltips ── */
@@ -316,6 +323,10 @@ export function DashboardStats() {
   const pendingPayment = filteredOrders.filter(o => o.status === "payment_pending").length;
   const periodRevenue  = revenueByDay.reduce((s, d) => s + d.revenue, 0);
   const avgOrderValue  = totalOrders > 0 ? totalRevenue / totalOrders : 0;
+  const peakRevenueDay = revenueByDay.reduce(
+    (best, day) => (day.revenue > best.revenue ? day : best),
+    { day: "-", revenue: 0 }
+  );
 
   const statusCounts = filteredOrders.reduce<Record<string, number>>((acc, o) => {
     acc[o.status] = (acc[o.status] || 0) + 1; return acc;
@@ -325,7 +336,16 @@ export function DashboardStats() {
     .filter(d => d.value > 0);
 
   const statCards = [
-    { label: "Revenue",     value: `$${totalRevenue.toFixed(0)}`,  sub: `avg $${avgOrderValue.toFixed(0)}/order`, icon: DollarSign, color: "#10b981", bg: "oklch(0.6 0.15 160 / 0.08)", border: "oklch(0.6 0.15 160 / 0.2)", spark: revenueByDay.map(d => d.revenue) },
+    {
+      label: "Revenue",
+      value: `$${totalRevenue.toFixed(0)}`,
+      sub: `avg $${avgOrderValue.toFixed(0)}/order`,
+      icon: DollarSign,
+      color: "#10b981",
+      bg: "oklch(0.6 0.15 160 / 0.08)",
+      border: "oklch(0.6 0.15 160 / 0.2)",
+      spark: revenueByDay.map(d => d.revenue),
+    },
     { label: "Orders",      value: totalOrders,                     sub: `${paidOrders} paid`,                     icon: ShoppingCart, color: "#3b82f6", bg: "oklch(0.55 0.18 250 / 0.08)", border: "oklch(0.55 0.18 250 / 0.2)", spark: revenueByDay.map(d => d.revenue > 0 ? 1 : 0) },
     { label: "Period Total", value: `$${periodRevenue.toFixed(0)}`, sub: `selected period`,                        icon: TrendingUp,   color: "#8b5cf6", bg: "oklch(0.52 0.2 300 / 0.07)",  border: "oklch(0.52 0.2 300 / 0.2)",  spark: revenueByDay.map(d => d.revenue) },
     { label: "Payment Due", value: pendingPayment,                  sub: `${((pendingPayment / Math.max(totalOrders, 1)) * 100).toFixed(0)}% of orders`, icon: Clock, color: "#f59e0b", bg: "oklch(0.7 0.18 50 / 0.07)", border: "oklch(0.7 0.18 50 / 0.2)", spark: [] },
@@ -504,29 +524,57 @@ export function DashboardStats() {
                 <div className="w-2 h-4 rounded-full" style={{ background: "linear-gradient(180deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }} />
                 <p className="text-sm font-black text-foreground">Revenue Over Time</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-0.5 ml-4">{rangeLabel} · <span className="font-semibold text-foreground">${periodRevenue.toFixed(2)}</span> total</p>
+              <p className="text-xs text-muted-foreground mt-0.5 ml-4">
+                {rangeLabel} · <span className="font-semibold text-foreground">${periodRevenue.toFixed(2)}</span> total
+              </p>
+            </div>
+            <div className="hidden sm:flex items-center gap-2">
+              <span className="rounded-lg border border-border bg-muted/30 px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+                Peak {peakRevenueDay.day}: <span className="text-foreground">{compactCurrency(peakRevenueDay.revenue)}</span>
+              </span>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={190}>
-            <BarChart data={revenueByDay} barSize={Math.max(8, Math.min(32, Math.floor(320 / revenueByDay.length)))}
-              margin={{ top: 22, right: 4, bottom: 0, left: -12 }}>
+            <AreaChart
+              data={revenueByDay}
+              margin={{ top: 18, right: 8, bottom: 0, left: -10 }}
+            >
+              <defs>
+                <linearGradient id="revArea" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="oklch(0.56 0.14 172)" stopOpacity={0.6} />
+                  <stop offset="70%" stopColor="oklch(0.52 0.13 182)" stopOpacity={0.22} />
+                  <stop offset="100%" stopColor="oklch(0.5 0.12 190)" stopOpacity={0.04} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="oklch(0.75 0.02 240 / 0.25)" />
               <XAxis dataKey="day" tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false}
                 interval={revenueByDay.length > 14 ? Math.floor(revenueByDay.length / 7) : 0} />
               <YAxis tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false}
-                tickFormatter={v => v === 0 ? "" : `$${v}`} />
+                tickFormatter={v => v === 0 ? "" : compactCurrency(Number(v))} />
               <Tooltip content={<RevenueTooltip />} cursor={{ fill: "rgba(0,0,0,0.04)", radius: 8 }} />
-              <Bar dataKey="revenue" radius={[6, 6, 0, 0]}>
-                {revenueByDay.map((entry, i) => (
-                  <Cell key={i} fill={entry.revenue > 0 ? "oklch(0.52 0.13 172)" : "oklch(0.52 0.13 172 / 0.18)"} />
-                ))}
+              <Area
+                type="monotone"
+                dataKey="revenue"
+                stroke="oklch(0.52 0.13 172)"
+                strokeWidth={2.5}
+                fill="url(#revArea)"
+                activeDot={{ r: 4, fill: "oklch(0.52 0.13 172)" }}
+                dot={false}
+              />
+              <Bar
+                dataKey="revenue"
+                barSize={Math.max(6, Math.min(16, Math.floor(180 / Math.max(revenueByDay.length, 1))))}
+                radius={[6, 6, 0, 0]}
+                fill="oklch(0.52 0.13 172 / 0.26)"
+              >
                 <LabelList dataKey="revenue" position="top"
                   formatter={(value) => {
                     const n = typeof value === "number" ? value : Number(value);
-                    return Number.isFinite(n) && n > 0 ? `$${n.toFixed(0)}` : "";
+                    return Number.isFinite(n) && n > 0 ? compactCurrency(n) : "";
                   }}
                   style={{ fontSize: 9, fontWeight: 700, fill: "var(--muted-foreground)" }} />
               </Bar>
-            </BarChart>
+            </AreaChart>
           </ResponsiveContainer>
           </div>
         </motion.div>
@@ -570,6 +618,26 @@ export function DashboardStats() {
                   >
                     {pieData.map((e, i) => <Cell key={i} fill={e.color} />)}
                   </Pie>
+                  <text
+                    x="50%"
+                    y="47%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="fill-foreground"
+                    style={{ fontSize: 16, fontWeight: 900 }}
+                  >
+                    {totalOrders}
+                  </text>
+                  <text
+                    x="50%"
+                    y="61%"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="fill-muted-foreground"
+                    style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.06em", textTransform: "uppercase" }}
+                  >
+                    Orders
+                  </text>
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-1.5 mt-2">
