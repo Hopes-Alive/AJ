@@ -57,7 +57,8 @@ const hours = [
 ];
 
 const quickFacts = [
-  { label: "Company", value: "AJ Fresh Foods Pty Ltd" },
+  { label: "Company", value: "AJ FRESH FOODS PTY LTD" },
+  { label: "ABN", value: "83 668 590 814" },
   { label: "Type", value: "Wholesale Grocery Distribution" },
   { label: "Coverage", value: "Australia-wide" },
   { label: "Catalogue", value: "130+ products · 12 categories" },
@@ -522,10 +523,10 @@ export function ContactContent() {
                 />
                 <div className="flex-1 min-w-0">
                   <p className="font-bold text-sm sm:text-base">
-                    AJ Fresh Foods
+                    AJ FRESH FOODS PTY LTD
                   </p>
                   <p className="text-xs text-primary font-medium">
-                    Wholesale Distribution
+                    ABN: 83 668 590 814
                   </p>
                 </div>
                 <div className="flex items-center gap-0.5 shrink-0">
