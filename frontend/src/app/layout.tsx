@@ -21,6 +21,11 @@ export const metadata: Metadata = {
     default: "AJ Fresh Foods | Wholesale Grocery Distribution",
     template: "%s | AJ Fresh Foods",
   },
+  icons: {
+    icon: "/images/logo.png",
+    shortcut: "/images/logo.png",
+    apple: "/images/logo.png",
+  },
   description:
     "Australian wholesale grocery distributor. 130+ products across beverages, spices, rice, noodles, dried fruits, and more. Competitive carton pricing for retailers.",
   keywords: [
