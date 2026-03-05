@@ -125,10 +125,13 @@ function RevenueTooltip({
   const raw = payload[0]?.value;
   const value = typeof raw === "number" ? raw : Number(raw ?? 0);
   return (
-    <div className="rounded-xl border border-border bg-card px-3.5 py-2.5"
-      style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}>
+    <div
+      className="rounded-xl border border-border bg-card/95 px-3.5 py-2.5 backdrop-blur-md"
+      style={{ boxShadow: "0 12px 28px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.45)" }}
+    >
       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-1">{label}</p>
       <p className="font-black text-base text-foreground">${Number.isFinite(value) ? value.toFixed(2) : "0.00"}</p>
+      <p className="text-[10px] text-muted-foreground mt-0.5">Revenue in selected period</p>
     </div>
   );
 }
@@ -141,8 +144,10 @@ function CatTooltip({ active, payload, label, mode }: {
   if (!active || !payload?.length) return null;
   const d = payload[0]?.payload ?? { revenue: 0, cartons: 0 };
   return (
-    <div className="rounded-xl border border-border bg-card px-3.5 py-2.5 min-w-[150px]"
-      style={{ boxShadow: "0 8px 24px rgba(0,0,0,0.12)" }}>
+    <div
+      className="rounded-xl border border-border bg-card/95 px-3.5 py-2.5 min-w-[150px] backdrop-blur-md"
+      style={{ boxShadow: "0 12px 28px rgba(0,0,0,0.16), inset 0 1px 0 rgba(255,255,255,0.45)" }}
+    >
       <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground mb-2">{label}</p>
       <div className="space-y-1">
         <p className="text-sm font-black text-foreground">${d.revenue.toFixed(2)}</p>
@@ -534,6 +539,14 @@ export function DashboardStats() {
               </span>
             </div>
           </div>
+          <div className="mb-3 flex items-center gap-2 flex-wrap">
+            <span className="rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+              Total {compactCurrency(periodRevenue)}
+            </span>
+            <span className="rounded-lg border border-sky-400/25 bg-sky-400/10 px-2.5 py-1 text-[10px] font-bold text-sky-700 dark:text-sky-300">
+              Avg {compactCurrency(avgOrderValue)} / order
+            </span>
+          </div>
           <ResponsiveContainer width="100%" height={190}>
             <AreaChart
               data={revenueByDay}
@@ -560,12 +573,14 @@ export function DashboardStats() {
                 fill="url(#revArea)"
                 activeDot={{ r: 4, fill: "oklch(0.52 0.13 172)" }}
                 dot={false}
+                animationDuration={950}
               />
               <Bar
                 dataKey="revenue"
                 barSize={Math.max(6, Math.min(16, Math.floor(180 / Math.max(revenueByDay.length, 1))))}
                 radius={[6, 6, 0, 0]}
                 fill="oklch(0.52 0.13 172 / 0.26)"
+                animationDuration={900}
               >
                 <LabelList dataKey="revenue" position="top"
                   formatter={(value) => {
@@ -601,6 +616,7 @@ export function DashboardStats() {
                   <Pie data={pieData} cx="50%" cy="50%"
                     innerRadius={38} outerRadius={60}
                     paddingAngle={3} dataKey="value" strokeWidth={0} labelLine={false}
+                    animationDuration={900}
                     label={(props: PieLabelRenderProps) => {
                       const { cx, cy, midAngle, outerRadius, percent } = props;
                       if ((percent ?? 0) < 0.07) return null;
@@ -713,7 +729,7 @@ export function DashboardStats() {
                   width={typeof window !== "undefined" && window.innerWidth < 640 ? 80 : 110}
                   tick={{ fontSize: 10, fill: "var(--foreground)", fontWeight: 600 }} axisLine={false} tickLine={false} />
                 <Tooltip content={(p) => <CatTooltip {...p} mode={catMode} />} cursor={{ fill: "rgba(0,0,0,0.03)" }} />
-                <Bar dataKey={catMode} radius={[0, 6, 6, 0]}>
+                <Bar dataKey={catMode} radius={[0, 8, 8, 0]} animationDuration={850}>
                   {categoryData.map((entry, i) => (
                     <Cell key={i} fill={entry.color} />
                   ))}

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { createClient } from "@/lib/supabase/client";
 import { BACKEND_BASE_URL } from "@/lib/api/base-url";
 import {
@@ -19,6 +20,7 @@ import {
   Package2,
   Code2,
   Shield,
+  Sparkles,
 } from "lucide-react";
 
 const BACKEND_URL = BACKEND_BASE_URL;
@@ -268,7 +270,21 @@ export function AdminAuthForm({ portalType = "admin" }: AdminAuthFormProps) {
       </div>
 
       {/* ── Right form panel ── */}
-      <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-8 py-12 bg-background relative">
+      <div className="flex-1 flex flex-col items-center justify-center px-5 sm:px-8 py-12 bg-background relative overflow-hidden">
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.55]"
+          style={{
+            background:
+              "radial-gradient(circle at 15% 20%, oklch(0.62 0.1 176 / 0.12), transparent 28%), radial-gradient(circle at 85% 18%, oklch(0.62 0.08 250 / 0.1), transparent 30%), radial-gradient(circle at 50% 100%, oklch(0.72 0.03 230 / 0.14), transparent 40%)",
+          }}
+        />
+        <div className="pointer-events-none absolute inset-0 opacity-[0.08]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)",
+            backgroundSize: "24px 24px",
+          }}
+        />
 
         {/* Back to site — top left */}
         <Link
@@ -287,7 +303,25 @@ export function AdminAuthForm({ portalType = "admin" }: AdminAuthFormProps) {
           <p className="text-sm font-semibold text-foreground">AJ Fresh Foods</p>
         </div>
 
-        <div className="w-full max-w-[400px]">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35, ease: "easeOut" }}
+          className="w-full max-w-[440px] rounded-3xl border border-border/60 p-6 sm:p-7 bg-card/70 backdrop-blur-xl"
+          style={{
+            boxShadow:
+              "0 24px 55px rgba(0,0,0,0.13), 0 8px 18px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.55)",
+          }}
+        >
+          <div className="mb-5 flex items-center justify-between">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-primary">
+              <Sparkles className="h-3 w-3" />
+              Premium Portal
+            </span>
+            <span className="rounded-full border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
+              Secure
+            </span>
+          </div>
 
           {/* Loading state */}
           {mode === "loading" && (
@@ -430,7 +464,7 @@ export function AdminAuthForm({ portalType = "admin" }: AdminAuthFormProps) {
               </div>
             </>
           )}
-        </div>
+        </motion.div>
       </div>
     </div>
   );
