@@ -3,6 +3,25 @@ import { BACKEND_BASE_URL } from "@/lib/api/base-url";
 
 const API_BASE = BACKEND_BASE_URL;
 
+async function parseJsonResponse(res: Response) {
+  const text = await res.text();
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(
+      `Backend returned non-JSON response (${res.status}) from ${API_BASE}`
+    );
+  }
+}
+
+async function safeFetch(input: string, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(input, init);
+  } catch {
+    throw new Error(`Unable to reach backend at ${API_BASE}`);
+  }
+}
+
 async function getAuthHeader(): Promise<Record<string, string>> {
   const supabase = createClient();
   const {
@@ -55,47 +74,50 @@ export interface CreateOrderPayload {
 
 export async function getOrders(): Promise<Order[]> {
   const headers = await getAuthHeader();
-  const res = await fetch(`${API_BASE}/api/orders`, { headers });
-  const json = await res.json();
+  const res = await safeFetch(`${API_BASE}/api/orders`, { headers });
+  const json = await parseJsonResponse(res);
   if (!json.success) throw new Error(json.error || "Failed to fetch orders");
   return json.data;
 }
 
 export async function getOrderById(id: string): Promise<Order> {
   const headers = await getAuthHeader();
-  const res = await fetch(`${API_BASE}/api/orders/${id}`, { headers });
-  const json = await res.json();
+  const res = await safeFetch(`${API_BASE}/api/orders/${id}`, { headers });
+  const json = await parseJsonResponse(res);
   if (!json.success) throw new Error(json.error || "Order not found");
   return json.data;
 }
 
 export async function lookupOrderByNumber(orderNumber: string): Promise<Order> {
   const headers = await getAuthHeader();
-  const res = await fetch(`${API_BASE}/api/orders/lookup/${encodeURIComponent(orderNumber)}`, { headers });
-  const json = await res.json();
+  const res = await safeFetch(
+    `${API_BASE}/api/orders/lookup/${encodeURIComponent(orderNumber)}`,
+    { headers }
+  );
+  const json = await parseJsonResponse(res);
   if (!json.success) throw new Error(json.error || "Order not found");
   return json.data;
 }
 
 export async function createOrder(payload: CreateOrderPayload): Promise<Order> {
   const headers = await getAuthHeader();
-  const res = await fetch(`${API_BASE}/api/orders`, {
+  const res = await safeFetch(`${API_BASE}/api/orders`, {
     method: "POST",
     headers,
     body: JSON.stringify(payload),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!json.success) throw new Error(json.error || "Failed to create order");
   return json.data;
 }
 
 export async function cancelOrder(id: string): Promise<Order> {
   const headers = await getAuthHeader();
-  const res = await fetch(`${API_BASE}/api/orders/${id}/cancel`, {
+  const res = await safeFetch(`${API_BASE}/api/orders/${id}/cancel`, {
     method: "PATCH",
     headers,
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!json.success) throw new Error(json.error || "Failed to cancel order");
   return json.data;
 }
@@ -105,12 +127,12 @@ export async function updateOrderStatus(
   status: Order["status"]
 ): Promise<Order> {
   const headers = await getAuthHeader();
-  const res = await fetch(`${API_BASE}/api/orders/${id}/status`, {
+  const res = await safeFetch(`${API_BASE}/api/orders/${id}/status`, {
     method: "PATCH",
     headers,
     body: JSON.stringify({ status }),
   });
-  const json = await res.json();
+  const json = await parseJsonResponse(res);
   if (!json.success) throw new Error(json.error || "Failed to update status");
   return json.data;
 }

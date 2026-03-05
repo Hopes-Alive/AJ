@@ -4,6 +4,13 @@ function looksLikeHost(value: string): boolean {
   return /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(value);
 }
 
+function extractHostFromString(value: string): string | null {
+  const hostMatch = value.match(
+    /([a-z0-9-]+(?:\.[a-z0-9-]+)+(?::\d+)?|localhost(?::\d+)?)/i
+  );
+  return hostMatch?.[1] ?? null;
+}
+
 function normalizeBaseUrl(value?: string): string {
   const raw = (value ?? "").trim();
   if (!raw) return LOCAL_BACKEND_FALLBACK;
@@ -30,6 +37,14 @@ function normalizeBaseUrl(value?: string): string {
   // Handle accidental leading slash values like "/my-backend.vercel.app".
   const withoutLeadingSlash = withoutTrailingSlash.replace(/^\/+/, "");
   if (!withoutLeadingSlash) return LOCAL_BACKEND_FALLBACK;
+
+  const extractedHost = extractHostFromString(withoutLeadingSlash);
+  if (extractedHost) {
+    if (extractedHost.startsWith("localhost")) {
+      return `http://${extractedHost}`;
+    }
+    return `https://${extractedHost}`;
+  }
 
   return `https://${withoutLeadingSlash}`;
 }
