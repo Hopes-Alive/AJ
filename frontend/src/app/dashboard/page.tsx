@@ -1,6 +1,14 @@
 import { createClient } from "@/lib/supabase/server";
 import Link from "next/link";
-import { ShoppingCart, ClipboardList, Search, ArrowRight, Boxes } from "lucide-react";
+import {
+  ShoppingCart,
+  ClipboardList,
+  Search,
+  ArrowRight,
+  Boxes,
+  Sparkles,
+  Activity,
+} from "lucide-react";
 import { DashboardStats } from "@/components/dashboard/dashboard-stats";
 
 export default async function DashboardPage() {
@@ -12,27 +20,61 @@ export default async function DashboardPage() {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="max-w-4xl mx-auto space-y-5">
+    <div className="max-w-6xl mx-auto space-y-6">
 
       {/* Welcome banner */}
       <div
-        className="relative rounded-3xl overflow-hidden p-6 sm:p-8"
+        className="group relative rounded-[28px] overflow-hidden p-6 sm:p-8 border border-white/10"
         style={{
-          background: "linear-gradient(135deg, oklch(0.16 0.05 172) 0%, oklch(0.12 0.04 190) 60%, oklch(0.10 0.03 220) 100%)",
-          boxShadow: "0 16px 48px oklch(0.52 0.13 172 / 0.25), 0 4px 12px rgba(0,0,0,0.15)",
+          background:
+            "radial-gradient(circle at 16% 18%, oklch(0.56 0.16 175 / 0.2), transparent 35%), radial-gradient(circle at 88% 18%, oklch(0.56 0.13 235 / 0.16), transparent 32%), linear-gradient(135deg, oklch(0.16 0.05 172) 0%, oklch(0.12 0.04 190) 60%, oklch(0.1 0.03 220) 100%)",
+          boxShadow:
+            "0 26px 72px oklch(0.52 0.13 172 / 0.28), 0 10px 20px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.15)",
         }}
       >
+        <div
+          className="pointer-events-none absolute inset-0 opacity-35"
+          style={{
+            backgroundImage:
+              "linear-gradient(125deg, transparent 28%, rgba(255,255,255,0.18) 40%, transparent 52%)",
+            transform: "translateX(-55%)",
+            transition: "transform 900ms ease",
+          }}
+        />
+
         {/* Glow blobs */}
         <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute -top-12 -right-12 w-56 h-56 rounded-full opacity-25"
+          <div
+            className="absolute -top-12 -right-12 w-56 h-56 rounded-full opacity-25"
             style={{ background: "radial-gradient(circle, oklch(0.6 0.15 172), transparent 70%)" }} />
-          <div className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full opacity-15"
+          <div
+            className="absolute -bottom-8 -left-8 w-40 h-40 rounded-full opacity-15"
             style={{ background: "radial-gradient(circle, oklch(0.55 0.13 200), transparent 70%)" }} />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 opacity-5"
+          <div
+            className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-32 opacity-5"
             style={{ background: "radial-gradient(ellipse, oklch(0.7 0.2 172), transparent 70%)" }} />
+          <div className="absolute inset-0 opacity-[0.08]"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.85) 1px, transparent 0)",
+              backgroundSize: "22px 22px",
+            }}
+          />
         </div>
 
-        <div className="relative flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+        <div className="relative flex flex-col gap-5">
+          <div className="flex items-center justify-between gap-3">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/80">
+              <Sparkles className="h-3 w-3" />
+              Analytics Command Center
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/30 bg-emerald-400/15 px-2.5 py-1 text-[10px] font-bold text-emerald-100">
+              <Activity className="h-3 w-3" />
+              Live
+            </span>
+          </div>
+
+          <div className="relative flex flex-col sm:flex-row sm:items-end justify-between gap-6">
           <div>
             <p className="text-white/40 text-xs font-semibold tracking-widest uppercase mb-1">{greeting}</p>
             <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight">
@@ -45,21 +87,25 @@ export default async function DashboardPage() {
             <p className="text-white/35 text-sm mt-1.5">AJ Fresh Foods Wholesale · {user?.email}</p>
           </div>
 
-          <Link
-            href="/dashboard/new-order"
-            className="group shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-2xl text-sm font-bold transition-all"
-            style={{
-              background: "rgba(255,255,255,0.12)",
-              backdropFilter: "blur(8px)",
-              border: "1px solid rgba(255,255,255,0.18)",
-              color: "white",
-              boxShadow: "0 4px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.2)",
-            }}
-          >
-            <ShoppingCart className="h-4 w-4" />
-            New Order
-            <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/dashboard/new-order"
+              className="group shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-2xl text-sm font-bold transition-all hover:-translate-y-0.5"
+              style={{
+                background: "rgba(255,255,255,0.12)",
+                backdropFilter: "blur(8px)",
+                border: "1px solid rgba(255,255,255,0.18)",
+                color: "white",
+                boxShadow:
+                  "0 10px 22px rgba(0,0,0,0.24), 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.22)",
+              }}
+            >
+              <ShoppingCart className="h-4 w-4" />
+              New Order
+              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+            </Link>
+          </div>
+          </div>
         </div>
       </div>
 
@@ -67,7 +113,7 @@ export default async function DashboardPage() {
       <DashboardStats />
 
       {/* Quick nav */}
-      <div className="grid sm:grid-cols-2 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[
           {
             href: "/dashboard/orders",
@@ -103,16 +149,26 @@ export default async function DashboardPage() {
           <Link
             key={href}
             href={href}
-            className="group flex items-center gap-4 p-5 rounded-2xl border transition-all duration-200 hover:scale-[1.01]"
+            className="group relative flex items-center gap-4 p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1"
             style={{
               background: bg,
               borderColor: border,
-              boxShadow: `0 2px 12px ${glow}`,
+              boxShadow: `0 12px 30px ${glow}, 0 2px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.45)`,
             }}
           >
             <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110"
-              style={{ background: `${color}18`, boxShadow: `0 4px 12px ${color}28` }}
+              className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{
+                background:
+                  "linear-gradient(120deg, transparent 10%, rgba(255,255,255,0.28) 45%, transparent 65%)",
+              }}
+            />
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 group-hover:-rotate-3"
+              style={{
+                background: `${color}18`,
+                boxShadow: `0 10px 18px ${color}30, inset 0 1px 0 rgba(255,255,255,0.55)`,
+              }}
             >
               <Icon className="h-5 w-5" style={{ color }} />
             </div>

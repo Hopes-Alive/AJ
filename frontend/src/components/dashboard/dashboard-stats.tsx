@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
 
 /* ── helpers ─────────────────────────────────────────────────── */
 
@@ -365,10 +366,22 @@ export function DashboardStats() {
   );
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="relative flex flex-col gap-5">
+      <div
+        className="pointer-events-none absolute inset-0 -z-10 opacity-[0.08]"
+        style={{
+          background:
+            "radial-gradient(circle at 12% 18%, oklch(0.55 0.14 172), transparent 30%), radial-gradient(circle at 85% 22%, oklch(0.52 0.18 250), transparent 28%), radial-gradient(circle at 50% 78%, oklch(0.6 0.14 300), transparent 30%)",
+        }}
+      />
 
       {/* ── Date range bar ── */}
-      <div className="rounded-2xl border border-border bg-card px-4 py-3 space-y-2.5"
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        whileHover={{ y: -1 }}
+        className="rounded-2xl border border-border bg-card px-4 py-3 space-y-2.5"
         style={{ boxShadow: "0 4px 20px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
         {/* Row 1: presets + custom toggle + refresh */}
         <div className="flex items-center gap-2 flex-wrap">
@@ -435,13 +448,26 @@ export function DashboardStats() {
 
         {/* Range label on mobile */}
         <p className="text-xs text-muted-foreground font-medium sm:hidden">{rangeLabel}</p>
-      </div>
+      </motion.div>
 
       {/* ── Stat cards ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        {statCards.map(({ label, value, sub, icon: Icon, color, bg, border, spark }) => (
-          <div key={label} className="rounded-2xl border p-4 flex flex-col gap-2 relative overflow-hidden"
+        {statCards.map(({ label, value, sub, icon: Icon, color, bg, border, spark }, idx) => (
+          <motion.div
+            key={label}
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: idx * 0.05 }}
+            whileHover={{ y: -4, scale: 1.01 }}
+            className="group rounded-2xl border p-4 flex flex-col gap-2 relative overflow-hidden"
             style={{ background: bg, borderColor: border, boxShadow: `0 6px 24px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.7)` }}>
+            <div
+              className="pointer-events-none absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+              style={{
+                background:
+                  "linear-gradient(120deg, transparent 18%, rgba(255,255,255,0.35) 46%, transparent 68%)",
+              }}
+            />
             <div className="absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl" style={{ background: `linear-gradient(90deg, ${color}, ${color}80)` }} />
             <div className="flex items-start justify-between">
               <div className="w-8 h-8 rounded-xl flex items-center justify-center"
@@ -455,7 +481,7 @@ export function DashboardStats() {
               <p className="text-[10px] text-muted-foreground mt-1 font-medium">{sub}</p>
             </div>
             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/60">{label}</p>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -463,7 +489,13 @@ export function DashboardStats() {
       <div className="grid lg:grid-cols-3 gap-4">
 
         {/* Revenue bar chart */}
-        <div className="lg:col-span-2 rounded-2xl border border-border bg-card overflow-hidden"
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.35 }}
+          whileHover={{ y: -2 }}
+          className="lg:col-span-2 rounded-2xl border border-border bg-card overflow-hidden"
           style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
           <div className="px-5 pt-5 pb-0">
           <div className="flex items-start justify-between mb-4">
@@ -497,10 +529,16 @@ export function DashboardStats() {
             </BarChart>
           </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
         {/* Status donut */}
-        <div className="rounded-2xl border border-border bg-card overflow-hidden"
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.35, delay: 0.05 }}
+          whileHover={{ y: -2 }}
+          className="rounded-2xl border border-border bg-card overflow-hidden"
           style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
           <div className="px-5 pt-5 pb-5">
           <div className="flex items-center gap-2 mb-0.5">
@@ -551,11 +589,17 @@ export function DashboardStats() {
             <div className="flex items-center justify-center h-40 text-muted-foreground/30 text-xs">No data</div>
           )}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* ── Category sales chart ── */}
-      <div className="rounded-2xl border border-border bg-card overflow-hidden"
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.35 }}
+        whileHover={{ y: -2 }}
+        className="rounded-2xl border border-border bg-card overflow-hidden"
         style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
         {/* Section header bar */}
         <div className="px-5 py-4 border-b border-border/60 flex items-start justify-between flex-wrap gap-3"
@@ -638,11 +682,17 @@ export function DashboardStats() {
           </div>
         )}
         </div>
-      </div>
+      </motion.div>
 
       {/* ── Product sales ── */}
       {allProductData.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden"
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.35 }}
+          whileHover={{ y: -2 }}
+          className="rounded-2xl border border-border bg-card overflow-hidden"
           style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
           {/* Section header */}
           <div className="px-5 py-4 border-b border-border/60 flex items-start justify-between flex-wrap gap-3"
@@ -671,7 +721,8 @@ export function DashboardStats() {
               const medalLabels = ["1st", "2nd", "3rd", "4th"];
               const color = medals[i];
               return (
-                <div key={p.name}
+                <motion.div key={p.name}
+                  whileHover={{ y: -2, scale: 1.01 }}
                   className="rounded-2xl border p-4 flex flex-col gap-2.5 relative overflow-hidden"
                   style={{
                     borderColor: `${color}30`,
@@ -701,7 +752,7 @@ export function DashboardStats() {
                       <p className="text-[9px] text-muted-foreground">revenue</p>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
@@ -789,12 +840,18 @@ export function DashboardStats() {
             )}
           </div>
           </div>{/* /p-5 */}
-        </div>
+        </motion.div>
       )}
 
       {/* ── Recent orders ── */}
       {filteredOrders.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden"
+        <motion.div
+          initial={{ opacity: 0, y: 14 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.35 }}
+          whileHover={{ y: -2 }}
+          className="rounded-2xl border border-border bg-card overflow-hidden"
           style={{ boxShadow: "0 6px 28px rgba(0,0,0,0.08), 0 1px 4px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.6)" }}>
           <div className="px-5 py-4 border-b border-border/60 flex items-center justify-between"
             style={{ background: "linear-gradient(135deg, rgba(0,0,0,0.02), rgba(0,0,0,0.01))" }}>
@@ -822,7 +879,7 @@ export function DashboardStats() {
               );
             })}
           </div>
-        </div>
+        </motion.div>
       )}
     </div>
   );
