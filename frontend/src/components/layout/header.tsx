@@ -135,7 +135,7 @@ export function Header() {
 
                 <Link
                   href="/admin"
-                  className="hidden lg:inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[12px] font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
+                  className="hidden md:inline-flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-[13px] font-semibold text-primary-foreground transition-all duration-300 hover:scale-[1.03] active:scale-[0.98]"
                   style={{
                     background:
                       "linear-gradient(145deg, oklch(0.52 0.12 176), oklch(0.44 0.11 190))",

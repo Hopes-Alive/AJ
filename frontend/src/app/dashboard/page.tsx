@@ -16,15 +16,16 @@ export default async function DashboardPage() {
   const { data: { user } } = await supabase.auth.getUser();
 
   const userName = (user?.user_metadata?.full_name as string | undefined)?.split(" ")[0] ?? "Admin";
+  const showPortalSuffix = !userName.toLowerCase().includes("admin");
   const hour = new Date().getHours();
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
-    <div className="max-w-6xl mx-auto space-y-6">
+    <div className="max-w-6xl mx-auto space-y-6 md:space-y-7">
 
       {/* Welcome banner */}
       <div
-        className="group relative rounded-[28px] overflow-hidden p-6 sm:p-8 border border-white/10"
+        className="group relative rounded-[28px] overflow-hidden p-6 sm:p-8 md:p-9 border border-white/10"
         style={{
           background:
             "radial-gradient(circle at 16% 18%, oklch(0.56 0.16 175 / 0.2), transparent 35%), radial-gradient(circle at 88% 18%, oklch(0.56 0.13 235 / 0.16), transparent 32%), linear-gradient(135deg, oklch(0.16 0.05 172) 0%, oklch(0.12 0.04 190) 60%, oklch(0.1 0.03 220) 100%)",
@@ -63,11 +64,11 @@ export default async function DashboardPage() {
 
         <div className="relative flex flex-col gap-5">
           <div className="flex items-center justify-between gap-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-widest text-white/80">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-[10px] sm:text-xs md:text-sm lg:text-xs font-bold uppercase tracking-widest text-white/80">
               <Sparkles className="h-3 w-3" />
               Analytics Command Center
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/30 bg-emerald-400/15 px-2.5 py-1 text-[10px] font-bold text-emerald-100">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/30 bg-emerald-400/15 px-2.5 py-1.5 text-[10px] md:text-xs font-bold text-emerald-100">
               <Activity className="h-3 w-3" />
               Live
             </span>
@@ -78,10 +79,12 @@ export default async function DashboardPage() {
             <p className="text-white/40 text-xs font-semibold tracking-widest uppercase mb-1">{greeting}</p>
             <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight">
               {userName}
-              <span
-                className="ml-2 text-transparent bg-clip-text"
-                style={{ backgroundImage: "linear-gradient(135deg, oklch(0.78 0.14 172), oklch(0.68 0.13 192))" }}
-              > Admin Portal</span>
+              {showPortalSuffix && (
+                <span
+                  className="ml-2 text-transparent bg-clip-text"
+                  style={{ backgroundImage: "linear-gradient(135deg, oklch(0.78 0.14 172), oklch(0.68 0.13 192))" }}
+                > Admin Portal</span>
+              )}
             </h1>
             <p className="text-white/35 text-sm mt-1.5">AJ Fresh Foods Wholesale · {user?.email}</p>
           </div>
@@ -89,19 +92,20 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-3">
             <Link
               href="/dashboard/new-order"
-              className="group shrink-0 flex items-center gap-2.5 px-5 py-3 rounded-2xl text-sm font-bold transition-all hover:-translate-y-0.5"
+              className="group shrink-0 flex items-center gap-3 px-7 py-4 md:px-8 md:py-4.5 rounded-2xl text-base md:text-lg lg:text-base font-black transition-all hover:-translate-y-1 active:scale-[0.98] animate-cta-attention"
               style={{
-                background: "rgba(255,255,255,0.12)",
+                background: "linear-gradient(135deg, oklch(0.56 0.14 172 / 0.92), oklch(0.48 0.12 192 / 0.95))",
                 backdropFilter: "blur(8px)",
-                border: "1px solid rgba(255,255,255,0.18)",
+                border: "1px solid rgba(255,255,255,0.35)",
                 color: "white",
                 boxShadow:
-                  "0 10px 22px rgba(0,0,0,0.24), 0 2px 8px rgba(0,0,0,0.15), inset 0 1px 0 rgba(255,255,255,0.22)",
+                  "0 14px 28px oklch(0.52 0.13 172 / 0.45), 0 4px 14px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.28)",
               }}
+              aria-label="Place New Order"
             >
-              <ShoppingCart className="h-4 w-4" />
-              New Order
-              <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
+              <ShoppingCart className="h-5 w-5 md:h-6 md:w-6 lg:h-5 lg:w-5" />
+              Place New Order
+              <ArrowRight className="h-4 w-4 md:h-5 md:w-5 lg:h-4 lg:w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
           </div>
@@ -112,7 +116,7 @@ export default async function DashboardPage() {
       <DashboardStats />
 
       {/* Quick nav */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-5">
         {[
           {
             href: "/dashboard/orders",
@@ -148,7 +152,7 @@ export default async function DashboardPage() {
           <Link
             key={href}
             href={href}
-            className="group relative flex items-center gap-4 p-5 rounded-2xl border transition-all duration-300 hover:-translate-y-1"
+            className="group relative flex items-center gap-4 p-5 md:p-6 rounded-2xl border transition-all duration-300 hover:-translate-y-1"
             style={{
               background: bg,
               borderColor: border,
@@ -163,21 +167,21 @@ export default async function DashboardPage() {
               }}
             />
             <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 group-hover:-rotate-3"
+              className="w-12 h-12 md:w-14 md:h-14 lg:w-12 lg:h-12 rounded-2xl flex items-center justify-center shrink-0 transition-transform group-hover:scale-110 group-hover:-rotate-3"
               style={{
                 background: `${color}18`,
                 boxShadow: `0 10px 18px ${color}30, inset 0 1px 0 rgba(255,255,255,0.55)`,
               }}
             >
-              <Icon className="h-5 w-5" style={{ color }} />
+              <Icon className="h-5 w-5 md:h-6 md:w-6 lg:h-5 lg:w-5" style={{ color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-foreground text-sm">{title}</p>
-              <p className="text-muted-foreground text-xs mt-0.5 truncate">{desc}</p>
+              <p className="font-bold text-foreground text-sm md:text-base lg:text-sm">{title}</p>
+              <p className="text-muted-foreground text-xs md:text-sm lg:text-xs mt-0.5 truncate">{desc}</p>
             </div>
-            <div className="w-7 h-7 rounded-full flex items-center justify-center transition-all group-hover:translate-x-0.5"
+            <div className="w-8 h-8 md:w-9 md:h-9 lg:w-7 lg:h-7 rounded-full flex items-center justify-center transition-all group-hover:translate-x-0.5"
               style={{ background: `${color}15` }}>
-              <ArrowRight className="h-3.5 w-3.5" style={{ color }} />
+              <ArrowRight className="h-4 w-4 lg:h-3.5 lg:w-3.5" style={{ color }} />
             </div>
           </Link>
         ))}

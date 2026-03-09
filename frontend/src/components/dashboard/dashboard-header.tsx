@@ -29,7 +29,7 @@ export function DashboardHeader({ userEmail, userName }: DashboardHeaderProps) {
   return (
     <>
       <header
-        className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 h-14"
+        className="lg:hidden sticky top-0 z-40 flex items-center justify-between px-4 md:px-5 h-16 md:h-[4.5rem]"
         style={{
           background: "rgba(255,255,255,0.92)",
           backdropFilter: "blur(12px)",
@@ -41,21 +41,21 @@ export function DashboardHeader({ userEmail, userName }: DashboardHeaderProps) {
         {/* Hamburger */}
         <button
           onClick={() => setSidebarOpen(true)}
-          className="w-9 h-9 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
           aria-label="Open menu"
         >
-          <Menu className="h-5 w-5" />
+          <Menu className="h-5 w-5 md:h-6 md:w-6" />
         </button>
 
         {/* Page title */}
-        <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-primary" />
-          <span className="font-black text-sm text-foreground">{meta.label}</span>
+        <div className="flex items-center gap-2.5">
+          <Icon className="h-5 w-5 text-primary" />
+          <span className="font-black text-base md:text-lg text-foreground">{meta.label}</span>
         </div>
 
         {/* Avatar */}
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 text-white text-xs font-black"
+          className="w-11 h-11 md:w-12 md:h-12 rounded-xl flex items-center justify-center shrink-0 text-white text-sm font-black"
           style={{
             background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
             boxShadow: "0 2px 8px oklch(0.52 0.13 172 / 0.3)",

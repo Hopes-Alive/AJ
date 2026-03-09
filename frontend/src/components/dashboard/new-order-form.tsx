@@ -6,12 +6,12 @@ import {
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { categories as fallbackCategories } from "@/data/products";
-import { createOrder, type OrderItem } from "@/lib/api/orders";
+import { createOrder, getOrders, type Order, type OrderItem } from "@/lib/api/orders";
 import { getCatalog } from "@/lib/api/catalog";
 import {
-  ShoppingCart, Plus, Minus, Trash2, Search,
+  ShoppingCart, Trash2, Search,
   Loader2, CheckCircle2, MapPin, FileText, Tag,
-  ClipboardEdit, PencilLine, Package,
+  ClipboardEdit, PencilLine, Package, RotateCcw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,6 +28,45 @@ function parsePrice(s: string) {
 
 function cartKey(groupId: string, name: string) {
   return `${groupId}__${name}`;
+}
+
+const META_PHONE_PREFIX = "[PHONE]";
+const META_ABN_PREFIX = "[ABN]";
+const META_DELIVERY_DATE_PREFIX = "[DELIVERY_DATE]";
+
+function buildOrderNotes(baseNotes: string, phone: string, abn: string, deliveryDate: string) {
+  const parts: string[] = [];
+  if (phone.trim()) parts.push(`${META_PHONE_PREFIX}${phone.trim()}`);
+  if (abn.trim()) parts.push(`${META_ABN_PREFIX}${abn.trim()}`);
+  if (deliveryDate.trim()) parts.push(`${META_DELIVERY_DATE_PREFIX}${deliveryDate.trim()}`);
+  if (baseNotes.trim()) parts.push(baseNotes.trim());
+  return parts.join("\n");
+}
+
+function parseOrderMeta(notes: string | null | undefined) {
+  const text = (notes ?? "").trim();
+  if (!text) return { phone: "", abn: "", deliveryDate: "", plainNotes: "" };
+  const lines = text.split("\n");
+  let phone = "";
+  let abn = "";
+  let deliveryDate = "";
+  const plain: string[] = [];
+  for (const line of lines) {
+    if (line.startsWith(META_PHONE_PREFIX)) {
+      phone = line.slice(META_PHONE_PREFIX.length).trim();
+      continue;
+    }
+    if (line.startsWith(META_ABN_PREFIX)) {
+      abn = line.slice(META_ABN_PREFIX.length).trim();
+      continue;
+    }
+    if (line.startsWith(META_DELIVERY_DATE_PREFIX)) {
+      deliveryDate = line.slice(META_DELIVERY_DATE_PREFIX.length).trim();
+      continue;
+    }
+    plain.push(line);
+  }
+  return { phone, abn, deliveryDate, plainNotes: plain.join("\n").trim() };
 }
 
 /* ─────────────────────── sub-components ───────────────── */
@@ -61,24 +100,49 @@ function ImageZoomModal({ src, alt, onClose }: { src: string; alt: string; onClo
 
 function ProductCard({
   product, defaultPack, defaultPrice, cartItem,
-  onAdd, onQtyChange, onSetQty, onSetPrice,
+  onAdd, onRemove,
 }: {
   product: { name: string; image?: string; pack?: string; price?: string };
   defaultPack?: string;
   defaultPrice?: string;
   cartItem?: CartItem;
-  onAdd: () => void;
-  onQtyChange: (delta: number) => void;
-  onSetQty: (qty: number) => void;
-  onSetPrice: (val: string) => void;
+  onAdd: (qty: number, customPrice: number) => void;
+  onRemove: () => void;
 }) {
   const [imgError, setImgError] = useState(false);
   const [zoomed, setZoomed] = useState(false);
-  const [qtyInput, setQtyInput] = useState<string>("");
-  const [priceInput, setPriceInput] = useState<string>("");
+  const [selecting, setSelecting] = useState(false);
+  const [draftQty, setDraftQty] = useState("1");
+  const [draftPrice, setDraftPrice] = useState("");
+  const [selectionError, setSelectionError] = useState<string | null>(null);
   const pack = product.pack ?? defaultPack ?? "—";
   const price = product.price ?? defaultPrice ?? "Contact";
   const hasImage = !!product.image && !imgError;
+  const basePrice = parsePrice(price);
+
+  function startSelection(prefillFromCart = false) {
+    setSelecting(true);
+    if (prefillFromCart && cartItem) {
+      setDraftQty(String(cartItem.quantity));
+      setDraftPrice(String(cartItem.customPrice));
+    } else {
+      setDraftQty("1");
+      setDraftPrice(basePrice > 0 ? String(basePrice) : "");
+    }
+    setSelectionError(null);
+  }
+
+  function confirmSelection() {
+    const qty = parseInt(draftQty || "0", 10) || 0;
+    const customPrice = draftPrice === "" ? 0 : (parseFloat(draftPrice) || 0);
+    if (qty <= 0 || customPrice <= 0) {
+      setSelectionError("Adding not possible. Qty and amount must be greater than 0.");
+      return;
+    }
+    onAdd(qty, customPrice);
+    setSelecting(false);
+    setSelectionError(null);
+  }
 
   return (
     <>
@@ -87,16 +151,16 @@ function ProductCard({
       )}
       <div
         className={cn(
-          "relative flex flex-col rounded-2xl overflow-hidden transition-all duration-300 cursor-default",
+          "relative flex flex-col rounded-3xl overflow-hidden transition-all duration-300 cursor-default",
           "border bg-card",
           cartItem
-            ? "border-primary/60 bg-gradient-to-b from-primary/5 to-card"
-            : "border-border/80 hover:border-primary/40",
+            ? "border-primary/60 bg-gradient-to-b from-primary/10 to-card"
+            : "border-border/80 hover:border-primary/45",
         )}
         style={cartItem ? {
-          boxShadow: "0 4px 24px oklch(0.52 0.13 172 / 0.18), 0 1px 4px oklch(0.52 0.13 172 / 0.1)",
+          boxShadow: "0 10px 30px oklch(0.52 0.13 172 / 0.2), 0 2px 8px oklch(0.52 0.13 172 / 0.12), inset 0 1px 0 rgba(255,255,255,0.5)",
         } : {
-          boxShadow: "0 2px 8px rgba(0,0,0,0.06)",
+          boxShadow: "0 8px 22px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.05), inset 0 1px 0 rgba(255,255,255,0.5)",
         }}
         onMouseEnter={e => {
           (e.currentTarget as HTMLDivElement).style.transform = "perspective(800px) translateY(-4px) rotateX(2deg)";
@@ -125,10 +189,11 @@ function ProductCard({
                 src={product.image!}
                 alt={product.name}
                 fill
-                className="object-contain p-2 transition-transform duration-500 group-hover/img:scale-110"
+                className="object-contain p-3 transition-transform duration-500 group-hover/img:scale-110"
                 onError={() => setImgError(true)}
                 sizes="(max-width: 640px) 50vw, 180px"
               />
+              <div className="absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/5 to-transparent pointer-events-none" />
               <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/10 transition-colors duration-300 flex items-center justify-center">
                 <div className="opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 w-9 h-9 rounded-full bg-white/80 backdrop-blur-sm flex items-center justify-center shadow-lg">
                   <svg className="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,64 +208,52 @@ function ProductCard({
             </div>
           )}
 
-          {/* In-cart badge */}
+          {/* In-cart sticker + qty badge */}
           {cartItem && (
-            <div
-              className="absolute top-2 right-2 min-w-[24px] h-6 px-1.5 rounded-full text-xs font-black flex items-center justify-center text-white"
-              style={{
-                background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
-                boxShadow: "0 2px 8px oklch(0.52 0.13 172 / 0.5)",
-              }}
-            >
-              {cartItem.quantity}
-            </div>
+            <>
+              <div
+                className="absolute top-2 left-2 h-8 md:h-9 px-3.5 md:px-4 rounded-full text-xs md:text-sm lg:text-xs font-black flex items-center justify-center text-white"
+                style={{
+                  background: "linear-gradient(135deg, #10b981, #059669)",
+                  boxShadow: "0 2px 8px rgba(16,185,129,0.45)",
+                }}
+              >
+                Added to cart
+              </div>
+              <div
+                className="absolute top-2 right-2 min-w-[24px] h-6 px-1.5 rounded-full text-xs font-black flex items-center justify-center text-white"
+                style={{
+                  background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
+                  boxShadow: "0 2px 8px oklch(0.52 0.13 172 / 0.5)",
+                }}
+              >
+                {cartItem.quantity}
+              </div>
+            </>
           )}
         </div>
 
         {/* Info */}
-        <div className="flex flex-col flex-1 p-3 pt-2.5">
-          <p className="font-bold text-foreground text-xs leading-snug line-clamp-2 flex-1 mb-1">
+        <div className="flex flex-col flex-1 p-4 pt-3.5">
+          <p className="font-bold text-foreground text-sm md:text-lg lg:text-sm leading-snug line-clamp-2 flex-1 mb-1">
             {product.name}
           </p>
-          <p className="text-[10px] text-muted-foreground/70">{pack}</p>
+          <p className="text-xs md:text-sm lg:text-xs text-muted-foreground/70 mb-0.5">{pack}</p>
 
-          {/* Price — static default; editable inline when item is in cart */}
+          {/* Price display */}
           <div className="mt-1.5 mb-2.5">
             {cartItem ? (
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-muted-foreground/60 font-medium">$</span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={priceInput !== "" ? priceInput : String(cartItem.customPrice)}
-                  onChange={e => {
-                    const raw = e.target.value.replace(/[^0-9.]/g, "");
-                    setPriceInput(raw);
-                  }}
-                  onFocus={e => e.target.select()}
-                  onBlur={() => {
-                    if (priceInput !== "") onSetPrice(priceInput);
-                    setPriceInput("");
-                  }}
-                  onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                  className="font-black text-sm w-full bg-transparent border-b-2 focus:outline-none pb-0.5 transition-colors"
-                  style={{
-                    borderColor: priceInput !== "" ? "oklch(0.52 0.13 172 / 0.8)" : "oklch(0.52 0.13 172 / 0.3)",
-                    color: priceInput !== "" ? "oklch(0.35 0.13 172)" : "oklch(0.44 0.13 172)",
-                  }}
-                />
-                {cartItem.customPrice !== parsePrice(price) && (
-                  <button
-                    type="button"
-                    title="Reset to default"
-                    onClick={() => onSetPrice(price)}
-                    className="text-[9px] text-muted-foreground/50 hover:text-red-400 transition-colors shrink-0"
-                  >↺</button>
-                )}
+              <div className="space-y-1">
+                <p className="text-sm md:text-lg lg:text-sm font-black text-primary">
+                  ${cartItem.customPrice.toFixed(2)}
+                </p>
+                <p className="text-xs md:text-sm lg:text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  Added to cart
+                </p>
               </div>
             ) : (
               <p
-                className="text-sm font-black"
+                className="text-sm md:text-lg lg:text-sm font-black"
                 style={{
                   background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
                   WebkitBackgroundClip: "text",
@@ -210,75 +263,111 @@ function ProductCard({
             )}
           </div>
 
-          {/* Quantity control — Uber Eats style */}
+          {/* Cart/select actions */}
           {(() => {
             const qty = cartItem?.quantity ?? 0;
             const inCart = qty > 0;
-            const displayVal = qtyInput !== "" ? qtyInput : String(qty);
+
+            if (selecting) {
+              return (
+                <div className="space-y-2.5">
+                  <div className="grid grid-cols-2 gap-2.5">
+                    <div className="rounded-xl border border-border bg-muted/20 px-3 py-2.5 md:px-3.5 md:py-3">
+                      <p className="text-xs md:text-base lg:text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1">Qty</p>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        value={draftQty}
+                        placeholder="0"
+                        onChange={e => {
+                          setDraftQty(e.target.value.replace(/[^0-9]/g, ""));
+                          if (selectionError) setSelectionError(null);
+                        }}
+                        onFocus={e => e.target.select()}
+                        className="w-full bg-transparent text-lg md:text-2xl lg:text-base font-black text-foreground focus:outline-none"
+                      />
+                    </div>
+                    <div className="rounded-xl border border-border bg-muted/20 px-3 py-2.5 md:px-3.5 md:py-3">
+                      <p className="text-xs md:text-base lg:text-xs font-bold text-muted-foreground uppercase tracking-wide mb-1">Price</p>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={draftPrice}
+                        placeholder="0"
+                        onChange={e =>
+                          {
+                            setDraftPrice(
+                              e.target.value
+                                .replace(/[^0-9.]/g, "")
+                                .replace(/(\..*)\./g, "$1")
+                            );
+                            if (selectionError) setSelectionError(null);
+                          }
+                        }
+                        onFocus={e => e.target.select()}
+                        className="w-full bg-transparent text-lg md:text-2xl lg:text-base font-black text-foreground focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={confirmSelection}
+                    className="w-full h-11 md:h-12 rounded-xl text-white font-bold text-base md:text-lg lg:text-sm flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
+                    style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }}
+                  >
+                    {inCart ? "Re-add with edits" : "Add to cart"}
+                  </button>
+                  {selectionError && (
+                    <p className="text-xs text-destructive bg-destructive/10 rounded-lg px-3 py-2">
+                      {selectionError}
+                    </p>
+                  )}
+                </div>
+              );
+            }
 
             if (!inCart) {
+
               return (
                 <button
                   type="button"
-                  onClick={onAdd}
-                  className="w-full h-9 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-1.5 hover:opacity-90 active:scale-95 transition-all"
+                  onClick={startSelection}
+                  className="w-full h-11 md:h-12 rounded-xl text-white font-bold text-base md:text-lg lg:text-sm flex items-center justify-center gap-2.5 hover:opacity-90 active:scale-95 transition-all"
                   style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }}
                 >
-                  <Plus className="h-4 w-4" />
                   Add
                 </button>
               );
             }
 
             return (
-              <div
-                className="flex items-center justify-between rounded-xl px-1 py-1 border"
-                style={{
-                  background: "oklch(0.52 0.13 172 / 0.09)",
-                  borderColor: "oklch(0.52 0.13 172 / 0.35)",
-                }}
-              >
-                {/* − button */}
-                <button
-                  type="button"
-                  onClick={() => onQtyChange(-1)}
-                  className="w-7 h-7 rounded-lg flex items-center justify-center transition-all hover:bg-red-50 hover:text-red-500 border border-border bg-background"
-                >
-                  <Minus className="h-3 w-3" />
-                </button>
-
-                {/* Editable qty — only commits on blur / Enter */}
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={displayVal}
-                  onChange={e => {
-                    const raw = e.target.value.replace(/[^0-9]/g, "");
-                    setQtyInput(raw);
+              <div className="space-y-2">
+                <div
+                  className="rounded-xl px-3 py-2 border text-xs md:text-base lg:text-xs font-semibold text-foreground/80"
+                  style={{
+                    background: "oklch(0.52 0.13 172 / 0.09)",
+                    borderColor: "oklch(0.52 0.13 172 / 0.35)",
                   }}
-                  onFocus={e => e.target.select()}
-                  onBlur={() => {
-                    if (qtyInput !== "") {
-                      const v = parseInt(qtyInput, 10);
-                      if (!isNaN(v) && v >= 1) onSetQty(v);
-                      else onQtyChange(-qty);
-                    }
-                    setQtyInput("");
-                  }}
-                  onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-                  className="font-black text-sm w-10 text-center bg-transparent focus:outline-none focus:bg-primary/10 rounded transition-colors text-foreground cursor-text"
-                />
-
-                {/* + button */}
-                <button
-                  type="button"
-                  onClick={() => onQtyChange(1)}
-                  className="w-7 h-7 rounded-xl text-white flex items-center justify-center hover:opacity-90 active:scale-95 transition-all"
-                  style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }}
                 >
-                  <Plus className="h-3 w-3" />
-                </button>
+                  Qty {cartItem.quantity} · ${cartItem.customPrice.toFixed(2)} each
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => startSelection(true)}
+                    className="h-10 md:h-11 rounded-xl border border-border bg-background text-foreground font-semibold text-sm md:text-lg lg:text-sm hover:bg-muted/40 transition-colors"
+                  >
+                    Edit selection
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onRemove}
+                    className="h-10 md:h-11 rounded-xl border border-destructive/30 bg-destructive/10 text-destructive font-semibold text-sm md:text-lg lg:text-sm hover:bg-destructive/15 transition-colors"
+                  >
+                    Remove from cart
+                  </button>
+                </div>
               </div>
             );
           })()}
@@ -291,26 +380,34 @@ function ProductCard({
 /* ── cart qty input — isolated local state so typing doesn't fight controlled value ── */
 function CartQtyInput({ value, onChange }: { value: number; onChange: (v: number) => void }) {
   const [local, setLocal] = useState("");
+  const [editing, setEditing] = useState(false);
   return (
     <input
       type="text"
       inputMode="numeric"
       pattern="[0-9]*"
-      value={local !== "" ? local : String(value)}
+      value={editing ? local : String(value)}
+      placeholder="0"
       onChange={e => {
         const raw = e.target.value.replace(/[^0-9]/g, "");
         setLocal(raw);
-        const v = parseInt(raw, 10);
-        if (!isNaN(v) && v >= 1) onChange(v);
+        if (raw !== "") {
+          const v = parseInt(raw, 10);
+          if (!isNaN(v) && v >= 1) onChange(v);
+        }
       }}
-      onFocus={e => { setLocal(String(value)); e.target.select(); }}
+      onFocus={e => { setEditing(true); setLocal(String(value)); e.target.select(); }}
       onBlur={() => {
-        const v = parseInt(local, 10);
-        if (isNaN(v) || v < 1) onChange(1);
+        if (local === "") onChange(0);
+        else {
+          const v = parseInt(local, 10);
+          onChange(!isNaN(v) ? v : value);
+        }
+        setEditing(false);
         setLocal("");
       }}
       onKeyDown={e => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); }}
-      className="w-8 text-center text-xs font-black text-foreground bg-transparent focus:outline-none focus:bg-muted/50 rounded px-0.5 py-0.5 transition-colors"
+      className="w-10 md:w-12 lg:w-8 text-center text-sm lg:text-xs font-black text-foreground bg-transparent focus:outline-none focus:bg-muted/50 rounded px-0.5 py-0.5 transition-colors"
     />
   );
 }
@@ -326,12 +423,21 @@ export function NewOrderForm() {
   const [activeCat, setActiveCat] = useState(fallbackCategories[0]?.id ?? "");
   const [cart, setCart] = useState<CartItem[]>([]);
   const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [customerAbn, setCustomerAbn] = useState("");
+  const [deliveryDate, setDeliveryDate] = useState("");
   const [notes, setNotes] = useState("");
   const [paymentStatus, setPaymentStatus] = useState<"payment_pending" | "paid">("payment_pending");
+  const [pastOrders, setPastOrders] = useState<Order[]>([]);
+  const [editingCartItemKey, setEditingCartItemKey] = useState<string | null>(null);
+  const [editDraftQty, setEditDraftQty] = useState("");
+  const [editDraftPrice, setEditDraftPrice] = useState("");
+  const [cartEditError, setCartEditError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState<{ orderNumber: string; orderName: string; placedAt: string } | null>(null);
   const [showCartMobile, setShowCartMobile] = useState(false);
+  const lastAutofilledNameRef = useRef("");
 
   useEffect(() => {
     let mounted = true;
@@ -351,12 +457,60 @@ export function NewOrderForm() {
     };
   }, []);
 
+  useEffect(() => {
+    let mounted = true;
+    getOrders()
+      .then((orders) => {
+        if (!mounted) return;
+        const sorted = [...orders].sort(
+          (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setPastOrders(sorted);
+      })
+      .catch(() => {
+        // Autofill is optional; keep form usable even when orders API fails.
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const name = orderName.trim().toLowerCase();
+    if (!name) {
+      lastAutofilledNameRef.current = "";
+      return;
+    }
+    if (name === lastAutofilledNameRef.current) return;
+    const match = pastOrders.find((o) => o.order_name.trim().toLowerCase() === name);
+    if (!match) return;
+    const meta = parseOrderMeta(match.notes);
+    setDeliveryAddress(match.delivery_address ?? "");
+    setCustomerPhone(meta.phone);
+    setCustomerAbn(meta.abn);
+    // Keep delivery date independent for each new order.
+    // New orders default to unpaid; do not inherit prior payment status.
+    setPaymentStatus("payment_pending");
+    if (meta.plainNotes) setNotes(meta.plainNotes);
+    lastAutofilledNameRef.current = name;
+  }, [orderName, pastOrders]);
+
+  useEffect(() => {
+    if (!submitted) return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [submitted]);
+
   /* refs */
   const tabBarRef = useRef<HTMLDivElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const cartSidebarRef = useRef<HTMLDivElement>(null);
+  const cartItemEditRefs = useRef<Record<string, HTMLDivElement | null>>({});
   const sectionRefs = useRef<Record<string, HTMLElement | null>>({});
   const suppressScrollspy = useRef(false);
   const suppressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollEndUnlockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingCategoryRef = useRef<string | null>(null);
+  const activeCatRef = useRef(activeCat);
 
   /* filtered categories */
   const displayCategories = useMemo(() => {
@@ -375,32 +529,77 @@ export function NewOrderForm() {
     })).filter(c => c.groups.length > 0);
   }, [catalog, search]);
 
+  useEffect(() => {
+    activeCatRef.current = activeCat;
+  }, [activeCat]);
+
   /* scrollspy — listen to window scroll, highlight active tab */
   useEffect(() => {
     function onScroll() {
-      // Skip scrollspy while a tab-click scroll is in progress
-      if (suppressScrollspy.current) return;
       const OFFSET = window.innerWidth >= 1024 ? 210 : 260;
+      const HYSTERESIS = 24;
+      // Keep selected tab stable during smooth-scroll after tab click.
+      if (suppressScrollspy.current) {
+        const pending = pendingCategoryRef.current;
+        if (pending) {
+          const pendingEl = sectionRefs.current[pending];
+          if (pendingEl) {
+            if (activeCatRef.current !== pending) {
+              activeCatRef.current = pending;
+              setActiveCat(pending);
+            }
+            // Unlock only after scrolling settles, not mid-animation.
+            if (scrollEndUnlockTimer.current) clearTimeout(scrollEndUnlockTimer.current);
+            scrollEndUnlockTimer.current = setTimeout(() => {
+              const stillPendingEl = sectionRefs.current[pending];
+              if (!stillPendingEl) return;
+              const distance = Math.abs(stillPendingEl.getBoundingClientRect().top - OFFSET);
+              // Release lock only when close enough to selected section.
+              if (distance <= 44) {
+                suppressScrollspy.current = false;
+                pendingCategoryRef.current = null;
+                if (suppressTimer.current) clearTimeout(suppressTimer.current);
+              }
+            }, 140);
+            return;
+          }
+          // If target section temporarily missing, keep lock until fallback timer.
+          return;
+        }
+        return;
+      }
       let current = displayCategories[0]?.id ?? "";
       for (const cat of displayCategories) {
         const el = sectionRefs.current[cat.id];
-        if (el && el.getBoundingClientRect().top - OFFSET <= 0) current = cat.id;
+        // Add a small buffer so tabs don't flip-flop at boundaries.
+        if (el && el.getBoundingClientRect().top - OFFSET <= -HYSTERESIS) current = cat.id;
       }
-      setActiveCat(current);
+      if (current !== activeCatRef.current) {
+        activeCatRef.current = current;
+        setActiveCat(current);
+      }
     }
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollEndUnlockTimer.current) clearTimeout(scrollEndUnlockTimer.current);
+    };
   }, [displayCategories]);
 
   /* click tab → scroll section into view below sticky block */
   function scrollToCategory(catId: string) {
     // Immediately lock the active tab and suppress scrollspy until scroll settles
     setActiveCat(catId);
+    activeCatRef.current = catId;
     suppressScrollspy.current = true;
+    pendingCategoryRef.current = catId;
     if (suppressTimer.current) clearTimeout(suppressTimer.current);
+    if (scrollEndUnlockTimer.current) clearTimeout(scrollEndUnlockTimer.current);
     suppressTimer.current = setTimeout(() => {
       suppressScrollspy.current = false;
-    }, 900);
+      pendingCategoryRef.current = null;
+      if (scrollEndUnlockTimer.current) clearTimeout(scrollEndUnlockTimer.current);
+    }, 3200);
 
     const el = sectionRefs.current[catId];
     if (el) {
@@ -412,19 +611,37 @@ export function NewOrderForm() {
     tab?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
   }
 
+  function handleCartQuickOpen() {
+    if (typeof window !== "undefined" && window.innerWidth >= 1024) {
+      cartSidebarRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    setShowCartMobile(true);
+  }
+
   /* cart helpers */
-  function addToCart(groupId: string, groupName: string, product: { name: string; pack?: string; price?: string }, defaultPack?: string, defaultPrice?: string, initialQty = 1) {
+  function addToCart(
+    groupId: string,
+    groupName: string,
+    product: { name: string; pack?: string; price?: string },
+    defaultPack?: string,
+    defaultPrice?: string,
+    initialQty = 1,
+    initialCustomPrice?: number
+  ) {
     const key = cartKey(groupId, product.name);
     const priceStr = product.price ?? defaultPrice ?? "0";
     const pack = product.pack ?? defaultPack ?? "—";
-    const cp = parsePrice(priceStr);
+    const cp = typeof initialCustomPrice === "number" && Number.isFinite(initialCustomPrice)
+      ? Math.max(0, initialCustomPrice)
+      : parsePrice(priceStr);
     const q = Math.max(1, initialQty);
 
     setCart(prev => {
       const existing = prev.find(i => i.cartKey === key);
       if (existing) {
         return prev.map(i => i.cartKey === key
-          ? { ...i, quantity: q, lineTotal: q * i.customPrice }
+          ? { ...i, quantity: q, customPrice: cp, lineTotal: q * cp }
           : i
         );
       }
@@ -446,40 +663,68 @@ export function NewOrderForm() {
     );
   }
 
-  function setQuantityDirect(key: string, qty: number) {
+  function startCartItemEdit(item: CartItem) {
+    setEditingCartItemKey(item.cartKey);
+    setEditDraftQty(String(item.quantity));
+    setEditDraftPrice(String(item.customPrice));
+    setCartEditError(null);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const target = cartItemEditRefs.current[item.cartKey];
+        target?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+  }
+
+  function keepCartItemSelection(item: CartItem) {
+    const qty = parseInt(editDraftQty || "0", 10) || 0;
+    const price = editDraftPrice === "" ? 0 : (parseFloat(editDraftPrice) || 0);
+    if (qty <= 0 || price <= 0) {
+      setCartEditError("Qty and amount must be greater than 0.");
+      return;
+    }
     setCart(prev =>
-      prev.map(i => i.cartKey === key
-        ? { ...i, quantity: qty, lineTotal: qty * i.customPrice }
-        : i
+      prev.map(i =>
+        i.cartKey === item.cartKey
+          ? { ...i, quantity: qty, customPrice: price, lineTotal: qty * price }
+          : i
       )
     );
-  }
-
-  function updateCustomPrice(key: string, val: string) {
-    const n = parseFloat(val) || 0;
-    setCart(prev => prev.map(i => i.cartKey === key
-      ? { ...i, customPrice: n, lineTotal: n * i.quantity }
-      : i
-    ));
-  }
-
-  function resetPrice(key: string) {
-    setCart(prev => prev.map(i => {
-      if (i.cartKey !== key) return i;
-      const d = parsePrice(i.price);
-      return { ...i, customPrice: d, lineTotal: d * i.quantity };
-    }));
+    setEditingCartItemKey(null);
+    setCartEditError(null);
   }
 
   const subtotal = cart.reduce((s, i) => s + i.lineTotal, 0);
   const totalCartons = cart.reduce((s, i) => s + i.quantity, 0);
+  const customerNameSuggestions = useMemo(() => {
+    const seen = new Set<string>();
+    const names: string[] = [];
+    for (const o of pastOrders) {
+      const n = o.order_name?.trim();
+      if (!n) continue;
+      const key = n.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      names.push(n);
+    }
+    return names;
+  }, [pastOrders]);
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false);
+  const [showCartNameSuggestions, setShowCartNameSuggestions] = useState(false);
+  const filteredCustomerNameSuggestions = useMemo(() => {
+    const q = orderName.trim().toLowerCase();
+    if (!q) return customerNameSuggestions.slice(0, 8);
+    return customerNameSuggestions
+      .filter((name) => name.toLowerCase().includes(q))
+      .slice(0, 8);
+  }, [customerNameSuggestions, orderName]);
 
   /* submit */
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!orderName.trim()) { setError("Order name is required"); return; }
+    if (!orderName.trim()) { setError("Customer name is required"); return; }
     if (cart.length === 0) { setError("Add at least one product"); return; }
-    if (!deliveryAddress.trim()) { setError("Delivery address is required"); return; }
+    if (!deliveryAddress.trim()) { setError("Customer address is required"); return; }
 
     setSubmitting(true);
     setError(null);
@@ -489,7 +734,7 @@ export function NewOrderForm() {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         items: cart.map(({ cartKey: _ck, priceEditing: _pe, ...item }) => item),
         subtotal,
-        notes: notes.trim() || undefined,
+        notes: buildOrderNotes(notes, customerPhone, customerAbn, deliveryDate) || undefined,
         delivery_address: deliveryAddress.trim(),
         status: paymentStatus,
       });
@@ -504,6 +749,32 @@ export function NewOrderForm() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function resetOrderDraft() {
+    setOrderName("");
+    setDeliveryAddress("");
+    setCustomerPhone("");
+    setCustomerAbn("");
+    setDeliveryDate("");
+    setNotes("");
+    setPaymentStatus("payment_pending");
+    setCart([]);
+    setEditingCartItemKey(null);
+    setEditDraftQty("");
+    setEditDraftPrice("");
+    setCartEditError(null);
+    setError(null);
+    setSearch("");
+    setShowNameSuggestions(false);
+    setShowCartNameSuggestions(false);
+    setShowCartMobile(false);
+    lastAutofilledNameRef.current = "";
+    setActiveCat(catalog[0]?.id ?? fallbackCategories[0]?.id ?? "");
+  }
+
+  function startNewOrder() {
+    window.location.assign("/dashboard/new-order");
   }
 
   /* ── success screen ── */
@@ -541,16 +812,24 @@ export function NewOrderForm() {
             </span>
           </div>
         </div>
-        <button
-          onClick={() => router.push("/dashboard/orders")}
-          className="w-full py-3 rounded-xl text-white font-semibold transition-all hover:scale-[1.01]"
-          style={{
-            background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
-            boxShadow: "0 4px 16px oklch(0.52 0.13 172 / 0.3)",
-          }}
-        >
-          View all orders
-        </button>
+        <div className="space-y-2.5">
+          <button
+            onClick={startNewOrder}
+            className="w-full py-3 rounded-xl text-white font-semibold transition-all hover:scale-[1.01]"
+            style={{
+              background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
+              boxShadow: "0 4px 16px oklch(0.52 0.13 172 / 0.3)",
+            }}
+          >
+            Start New Order
+          </button>
+          <button
+            onClick={() => router.push("/dashboard/orders")}
+            className="w-full py-3 rounded-xl border border-border bg-background text-foreground font-semibold transition-all hover:bg-muted/40"
+          >
+            View all orders
+          </button>
+        </div>
       </div>
     );
   }
@@ -562,57 +841,105 @@ export function NewOrderForm() {
       <div className="flex-1 overflow-y-auto">
 
       {/* Order details */}
-      <div className="px-4 py-4 border-b border-border space-y-3">
+      <div className="px-4 md:px-5 py-4 md:py-5 border-b border-border space-y-3.5">
         <h3 className="font-bold text-foreground text-sm flex items-center gap-2">
           <ClipboardEdit className="h-4 w-4 text-muted-foreground" />
           Order Details
         </h3>
 
-        <div className="relative">
-          <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-muted-foreground">Customer Name *</label>
+          <div className="relative">
+            <Tag className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              value={orderName}
+              onChange={e => setOrderName(e.target.value)}
+              onFocus={() => setShowCartNameSuggestions(true)}
+              onBlur={() => {
+                setTimeout(() => setShowCartNameSuggestions(false), 120);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setShowCartNameSuggestions(false);
+              }}
+              placeholder="Customer or business name"
+              className="w-full pl-9 pr-3 py-3 md:py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base"
+            />
+            {showCartNameSuggestions && filteredCustomerNameSuggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 z-40 rounded-xl border border-border bg-card shadow-lg overflow-hidden">
+                <div className="max-h-52 overflow-y-auto p-1">
+                  {filteredCustomerNameSuggestions.map((name) => (
+                    <button
+                      key={`cart-${name}`}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setOrderName(name);
+                        setShowCartNameSuggestions(false);
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-lg text-sm md:text-base text-foreground hover:bg-muted/60 transition-colors"
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-muted-foreground">Address *</label>
+          <div className="relative">
+            <MapPin className="h-3.5 w-3.5 text-muted-foreground mt-0.5" />
+            <textarea
+              value={deliveryAddress}
+              onChange={e => setDeliveryAddress(e.target.value)}
+              placeholder="Delivery address"
+              rows={2}
+              className="w-full pl-9 pr-3 py-3 md:py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base resize-none"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
           <input
             type="text"
-            value={orderName}
-            onChange={e => setOrderName(e.target.value)}
-            placeholder="Order name (e.g. Smith's IGA Weekly)"
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm"
+            value={customerPhone}
+            onChange={e => setCustomerPhone(e.target.value)}
+            placeholder="Phone number"
+            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
+          />
+          <input
+            type="text"
+            value={customerAbn}
+            onChange={e => setCustomerAbn(e.target.value)}
+            placeholder="ABN"
+            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
           />
         </div>
 
-        <div className="relative">
-          <MapPin className="absolute left-3 top-3 h-3.5 w-3.5 text-muted-foreground" />
-          <textarea
-            value={deliveryAddress}
-            onChange={e => setDeliveryAddress(e.target.value)}
-            placeholder="Delivery address"
-            rows={2}
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm resize-none"
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-muted-foreground">Delivery Date (optional)</label>
+          <input
+            type="date"
+            value={deliveryDate}
+            onChange={e => setDeliveryDate(e.target.value)}
+            className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 text-sm"
           />
         </div>
 
-        <div className="relative">
-          <FileText className="absolute left-3 top-3 h-3.5 w-3.5 text-muted-foreground" />
-          <textarea
-            value={notes}
-            onChange={e => setNotes(e.target.value)}
-            placeholder="Notes (optional)"
-            rows={1}
-            className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm resize-none"
-          />
-        </div>
-
-        {/* Payment status radio */}
         <div>
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Payment Status</p>
           <div className="grid grid-cols-2 gap-2">
             {([
-              { value: "payment_pending", label: "Unpaid", sub: "Payment pending", color: "amber" },
-              { value: "paid", label: "Paid", sub: "Already paid", color: "emerald" },
-            ] as const).map(({ value, label, sub, color }) => (
+              { value: "payment_pending", label: "Unpaid", color: "amber" },
+              { value: "paid", label: "Paid", color: "emerald" },
+            ] as const).map(({ value, label, color }) => (
               <label
                 key={value}
                 className={cn(
-                  "flex flex-col gap-0.5 p-3 rounded-xl border-2 cursor-pointer transition-all",
+                  "flex items-center justify-between p-3 rounded-xl border-2 cursor-pointer transition-all",
                   paymentStatus === value
                     ? color === "amber"
                       ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20"
@@ -620,26 +947,15 @@ export function NewOrderForm() {
                     : "border-border bg-background hover:border-border/80"
                 )}
               >
-                <div className="flex items-center justify-between">
-                  <span className={cn(
-                    "text-sm font-bold",
-                    paymentStatus === value
-                      ? color === "amber" ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"
-                      : "text-foreground"
-                  )}>{label}</span>
-                  <div className={cn(
-                    "w-4 h-4 rounded-full border-2 flex items-center justify-center",
-                    paymentStatus === value
-                      ? color === "amber" ? "border-amber-500 bg-amber-500" : "border-emerald-500 bg-emerald-500"
-                      : "border-muted-foreground/30"
-                  )}>
-                    {paymentStatus === value && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                  </div>
-                </div>
-                <span className="text-[10px] text-muted-foreground">{sub}</span>
+                <span className={cn(
+                  "text-sm font-bold",
+                  paymentStatus === value
+                    ? color === "amber" ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"
+                    : "text-foreground"
+                )}>{label}</span>
                 <input
                   type="radio"
-                  name="paymentStatus"
+                  name="paymentStatusCart"
                   value={value}
                   checked={paymentStatus === value}
                   onChange={() => setPaymentStatus(value)}
@@ -649,6 +965,20 @@ export function NewOrderForm() {
             ))}
           </div>
         </div>
+
+        <div className="relative">
+          <FileText className="absolute left-3 top-3 h-3.5 w-3.5 text-muted-foreground" />
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Notes (optional)"
+            rows={1}
+            className="w-full pl-9 pr-3 py-3 md:py-3.5 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base lg:text-sm resize-none"
+          />
+        </div>
+        <p className="text-[11px] text-muted-foreground">
+          You can edit these details here before final order placement.
+        </p>
       </div>
 
       {/* Cart items */}
@@ -657,7 +987,7 @@ export function NewOrderForm() {
           <div className="flex flex-col items-center justify-center h-40 text-center px-4">
             <ShoppingCart className="h-10 w-10 text-muted-foreground/20 mb-3" />
             <p className="text-sm font-medium text-muted-foreground">Your order is empty</p>
-            <p className="text-xs text-muted-foreground/60 mt-1">Tap + on any product to add it</p>
+            <p className="text-xs text-muted-foreground/60 mt-1">Tap Add on any product to add it</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -672,87 +1002,99 @@ export function NewOrderForm() {
             </div>
 
             {cart.map(item => {
-              const defaultPrice = parsePrice(item.price);
-              const isCustom = Math.abs(item.customPrice - defaultPrice) > 0.001;
+              const isEditing = editingCartItemKey === item.cartKey;
               return (
-                <div key={item.cartKey} className="px-4 py-3">
+                <div key={item.cartKey} className="px-4 md:px-5 py-3.5">
                   <div className="flex items-start justify-between mb-2 gap-2">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-foreground leading-tight truncate">{item.productName}</p>
                       <p className="text-xs text-muted-foreground">{item.pack}</p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.cartKey, -item.quantity)}
-                      className="p-1 text-muted-foreground hover:text-destructive shrink-0"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
-                    <div />
-                    {/* qty */}
-                    <div className="flex items-center gap-0.5 justify-center">
-                      <button type="button" onClick={() => updateQuantity(item.cartKey, -1)}
-                        className="w-5 h-5 rounded bg-muted flex items-center justify-center hover:bg-red-100 hover:text-red-500 transition-colors">
-                        <Minus className="h-2.5 w-2.5" />
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => startCartItemEdit(item)}
+                        className="px-2.5 py-1.5 text-xs font-semibold rounded-lg border border-border text-foreground hover:bg-muted/40 transition-colors shrink-0"
+                      >
+                        Edit
                       </button>
-                      <CartQtyInput
-                        value={item.quantity}
-                        onChange={v => setQuantityDirect(item.cartKey, v)}
-                      />
-                      <button type="button" onClick={() => updateQuantity(item.cartKey, 1)}
-                        className="w-5 h-5 rounded bg-muted flex items-center justify-center hover:bg-primary/15 hover:text-primary transition-colors">
-                        <Plus className="h-2.5 w-2.5" />
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.cartKey, -item.quantity)}
+                        className="p-2 text-muted-foreground hover:text-destructive shrink-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
+                  </div>
 
-                    {/* price */}
-                    <div className="w-20">
-                      {item.priceEditing ? (
-                        <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">$</span>
+                  {isEditing ? (
+                    <div
+                      ref={el => {
+                        cartItemEditRefs.current[item.cartKey] = el;
+                      }}
+                      className="rounded-xl border border-border bg-muted/20 p-3 space-y-2.5"
+                      style={{ scrollMarginBlock: "7.5rem" }}
+                    >
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Qty</label>
                           <input
-                            type="number" step="0.01" min="0"
-                            value={item.customPrice || ""}
-                            onChange={e => updateCustomPrice(item.cartKey, e.target.value)}
-                            onBlur={() => setCart(p => p.map(i => i.cartKey === item.cartKey ? { ...i, priceEditing: false } : i))}
-                            autoFocus
-                            className="w-full pl-5 pr-1 py-1 text-xs rounded-lg border border-primary bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                            type="text"
+                            inputMode="numeric"
+                            value={editDraftQty}
+                            onChange={e => {
+                              setEditDraftQty(e.target.value.replace(/[^0-9]/g, ""));
+                              if (cartEditError) setCartEditError(null);
+                            }}
+                            placeholder="Qty"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40"
                           />
                         </div>
-                      ) : (
-                        <button type="button"
-                          onClick={() => setCart(p => p.map(i => i.cartKey === item.cartKey ? { ...i, priceEditing: true } : i))}
-                          className={cn(
-                            "w-full text-center text-xs py-1 rounded-lg border transition-colors",
-                            isCustom
-                              ? "border-amber-400/50 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
-                              : "border-dashed border-border text-muted-foreground hover:border-primary hover:text-primary"
-                          )}
-                        >
-                          ${item.customPrice.toFixed(2)}
-                          {isCustom && (
-                            <span
-                              onClick={e => { e.stopPropagation(); resetPrice(item.cartKey); }}
-                              className="ml-1 text-amber-500 hover:text-amber-700 font-bold"
-                            >↺</span>
-                          )}
-                        </button>
-                      )}
-                      {!item.priceEditing && (
-                        <p className="text-[9px] text-center text-muted-foreground/50 mt-0.5">
-                          Default ${defaultPrice.toFixed(2)}
-                        </p>
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide">Price</label>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={editDraftPrice}
+                            onChange={e => {
+                              setEditDraftPrice(
+                                e.target.value
+                                  .replace(/[^0-9.]/g, "")
+                                  .replace(/(\..*)\./g, "$1")
+                              );
+                              if (cartEditError) setCartEditError(null);
+                            }}
+                            placeholder="Price"
+                            className="w-full px-3 py-2.5 rounded-lg border border-border bg-background text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/40"
+                          />
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => keepCartItemSelection(item)}
+                        className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                      >
+                        Keep selection
+                      </button>
+                      {cartEditError && (
+                        <p className="text-xs text-destructive">{cartEditError}</p>
                       )}
                     </div>
-
-                    {/* line total */}
-                    <div className="w-14 text-right">
-                      <p className="text-sm font-bold">${item.lineTotal.toFixed(2)}</p>
+                  ) : (
+                    <div className="grid grid-cols-[1fr_auto_auto_auto] gap-2 items-center">
+                      <div />
+                      <div className="w-14 text-center">
+                        <p className="text-base font-black text-foreground">{item.quantity}</p>
+                      </div>
+                      <div className="w-20 text-center">
+                        <p className="text-sm font-semibold text-foreground">${item.customPrice.toFixed(2)}</p>
+                      </div>
+                      <div className="w-14 text-right">
+                        <p className="text-sm font-bold">${item.lineTotal.toFixed(2)}</p>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
@@ -763,7 +1105,7 @@ export function NewOrderForm() {
       </div>{/* end scrollable body */}
 
       {/* Footer: subtotal + submit */}
-      <div className="border-t border-border px-4 py-4 space-y-3 bg-card">
+      <div className="border-t border-border px-4 md:px-5 py-4 md:py-5 space-y-3 bg-card">
         {cart.length > 0 && (
           <div className="flex justify-between items-center">
             <span className="text-sm text-muted-foreground">{totalCartons} carton{totalCartons !== 1 ? "s" : ""}</span>
@@ -776,7 +1118,7 @@ export function NewOrderForm() {
         <button
           type="submit"
           disabled={submitting || cart.length === 0}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
+          className="w-full flex items-center justify-center gap-2 py-4 md:py-4.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm md:text-base lg:text-sm hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
         >
           {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
           {submitting ? "Placing order…" : cart.length === 0 ? "Add products to order" : `Place Order  ·  $${subtotal.toFixed(2)}`}
@@ -794,18 +1136,157 @@ export function NewOrderForm() {
           <h1 className="text-xl sm:text-2xl font-bold text-foreground">New Order</h1>
           <p className="text-sm text-muted-foreground mt-0.5 hidden sm:block">Select products, set prices, and submit</p>
         </div>
-        {/* Tablet cart button (md only, not shown on mobile where bottom bar is used) */}
         <button
           type="button"
-          onClick={() => setShowCartMobile(true)}
-          className="hidden md:flex lg:hidden relative items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold shadow-lg shadow-primary/20"
+          onClick={resetOrderDraft}
+          className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm font-semibold hover:bg-muted/40 transition-colors"
         >
-          <ShoppingCart className="h-4 w-4" />
-          {cart.length > 0
-            ? <><span>${subtotal.toFixed(2)}</span><span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center">{totalCartons}</span></>
-            : "Cart"
-          }
+          <RotateCcw className="h-4 w-4" />
+          Restart Order
         </button>
+      </div>
+
+      <div className="mb-4 md:mb-5 rounded-2xl border border-border bg-card p-4 md:p-5 space-y-3.5">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <h2 className="text-sm md:text-base font-bold text-foreground flex items-center gap-2">
+            <ClipboardEdit className="h-4 w-4 text-muted-foreground" />
+            Customer Details
+          </h2>
+          <p className="text-xs text-muted-foreground">
+            Name and address are required.
+          </p>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-3">
+          <div className="space-y-1 relative">
+            <label className="text-xs font-semibold text-muted-foreground">Customer Name *</label>
+            <input
+              type="text"
+              value={orderName}
+              onChange={e => setOrderName(e.target.value)}
+              onFocus={() => setShowNameSuggestions(true)}
+              onBlur={() => {
+                setTimeout(() => setShowNameSuggestions(false), 120);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setShowNameSuggestions(false);
+              }}
+              placeholder="Customer or business name"
+              className="w-full px-3 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base"
+            />
+            {showNameSuggestions && filteredCustomerNameSuggestions.length > 0 && (
+              <div className="absolute left-0 right-0 top-full mt-1 z-40 rounded-xl border border-border bg-card shadow-lg overflow-hidden">
+                <div className="max-h-52 overflow-y-auto p-1">
+                  {filteredCustomerNameSuggestions.map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setOrderName(name);
+                        setShowNameSuggestions(false);
+                      }}
+                      className="w-full text-left px-3 py-2.5 rounded-lg text-sm md:text-base text-foreground hover:bg-muted/60 transition-colors"
+                    >
+                      {name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-muted-foreground">Phone Number</label>
+            <input
+              type="text"
+              value={customerPhone}
+              onChange={e => setCustomerPhone(e.target.value)}
+              placeholder="e.g. 0412 345 678"
+              className="w-full px-3 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base"
+            />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-3">
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-muted-foreground">Address *</label>
+            <textarea
+              value={deliveryAddress}
+              onChange={e => setDeliveryAddress(e.target.value)}
+              placeholder="Delivery address"
+              rows={2}
+              className="w-full px-3 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base resize-none"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-semibold text-muted-foreground">ABN</label>
+            <input
+              type="text"
+              value={customerAbn}
+              onChange={e => setCustomerAbn(e.target.value)}
+              placeholder="Australian Business Number"
+              className="w-full px-3 py-3 rounded-xl border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-1">
+          <label className="text-xs font-semibold text-muted-foreground">Delivery Date (optional)</label>
+          <input
+            type="date"
+            value={deliveryDate}
+            onChange={e => setDeliveryDate(e.target.value)}
+            className="w-full px-3 py-3 rounded-xl border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 text-sm md:text-base"
+          />
+        </div>
+
+        <div>
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Payment Status</p>
+          <div className="grid grid-cols-2 gap-2">
+            {([
+              { value: "payment_pending", label: "Unpaid", sub: "Payment pending", color: "amber" },
+              { value: "paid", label: "Paid", sub: "Already paid", color: "emerald" },
+            ] as const).map(({ value, label, sub, color }) => (
+              <label
+                key={value}
+                className={cn(
+                  "flex flex-col gap-0.5 p-3.5 md:p-4 rounded-xl border-2 cursor-pointer transition-all",
+                  paymentStatus === value
+                    ? color === "amber"
+                      ? "border-amber-400 bg-amber-50 dark:bg-amber-900/20"
+                      : "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                    : "border-border bg-background hover:border-border/80"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className={cn(
+                    "text-sm md:text-base font-bold",
+                    paymentStatus === value
+                      ? color === "amber" ? "text-amber-700 dark:text-amber-400" : "text-emerald-700 dark:text-emerald-400"
+                      : "text-foreground"
+                  )}>{label}</span>
+                  <div className={cn(
+                    "w-5 h-5 rounded-full border-2 flex items-center justify-center",
+                    paymentStatus === value
+                      ? color === "amber" ? "border-amber-500 bg-amber-500" : "border-emerald-500 bg-emerald-500"
+                      : "border-muted-foreground/30"
+                  )}>
+                    {paymentStatus === value && <div className="w-2 h-2 rounded-full bg-white" />}
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground">{sub}</span>
+                <input
+                  type="radio"
+                  name="paymentStatusTop"
+                  value={value}
+                  checked={paymentStatus === value}
+                  onChange={() => setPaymentStatus(value)}
+                  className="sr-only"
+                />
+              </label>
+            ))}
+          </div>
+        </div>
       </div>
 
       <div className="flex gap-6 items-start">
@@ -815,7 +1296,7 @@ export function NewOrderForm() {
 
           {/* Sticky block: search bar + category tabs */}
           <div
-            className="sticky top-[122px] sm:top-[136px] lg:top-[82px] z-20 bg-background/95 backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-3 pb-2 border-b border-border/50"
+            className="sticky top-16 md:top-[4.5rem] lg:top-[82px] z-20 bg-background/95 backdrop-blur-sm -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 pt-2.5 pb-2 border-b border-border/50"
           >
             {/* Search */}
             <div className="relative mb-2.5">
@@ -842,7 +1323,7 @@ export function NewOrderForm() {
                   data-tab={cat.id}
                   onClick={() => scrollToCategory(cat.id)}
                   className={cn(
-                    "shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap border",
+                    "shrink-0 px-4 py-2 md:py-2.5 rounded-full text-sm lg:text-xs font-semibold transition-all whitespace-nowrap border",
                     activeCat === cat.id
                       ? "bg-primary text-primary-foreground border-primary shadow-sm"
                       : "bg-card text-muted-foreground border-border hover:text-foreground hover:border-primary/40 hover:bg-muted/50"
@@ -884,7 +1365,7 @@ export function NewOrderForm() {
                     </div>
 
                     {/* Product cards grid */}
-                    <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 md:gap-4">
                       {group.products.map((product, pIdx) => {
                         const ck = cartKey(group.id, product.name);
                         const reactKey = `${ck}-${pIdx}`;
@@ -895,10 +1376,8 @@ export function NewOrderForm() {
                             defaultPack={group.defaultPack}
                             defaultPrice={group.defaultPrice}
                             cartItem={cart.find(i => i.cartKey === ck)}
-                            onAdd={() => addToCart(group.id, group.name, product, group.defaultPack, group.defaultPrice)}
-                            onQtyChange={d => updateQuantity(ck, d)}
-                            onSetQty={qty => setQuantityDirect(ck, qty)}
-                            onSetPrice={val => updateCustomPrice(ck, val)}
+                            onAdd={(qty, customPrice) => addToCart(group.id, group.name, product, group.defaultPack, group.defaultPrice, qty, customPrice)}
+                            onRemove={() => updateQuantity(ck, -9999)}
                           />
                         );
                       })}
@@ -911,45 +1390,42 @@ export function NewOrderForm() {
         </div>
 
         {/* ── Right: Cart + order details (desktop only, sticky below site header) ── */}
-        <div className="hidden lg:flex flex-col w-[360px] shrink-0 border border-border rounded-2xl bg-card overflow-hidden sticky top-[90px]" style={{ height: "calc(100vh - 100px)" }}>
+        <div
+          ref={cartSidebarRef}
+          className="hidden lg:flex flex-col w-[360px] shrink-0 border border-border rounded-2xl bg-card overflow-hidden sticky top-[90px]"
+          style={{ height: "calc(100vh - 100px)" }}
+        >
           {CartPanel}
         </div>
       </div>
 
-      {/* ── Mobile sticky bottom cart bar ── */}
-      <div className="md:hidden fixed bottom-0 left-0 right-0 z-30 p-3"
-        style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom))" }}>
-        <button
-          type="button"
-          onClick={() => setShowCartMobile(true)}
-          className="w-full flex items-center justify-between px-5 py-4 rounded-2xl text-white font-bold shadow-2xl transition-all active:scale-[0.98]"
-          style={{
-            background: cart.length > 0
-              ? "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))"
-              : "linear-gradient(135deg, oklch(0.45 0.05 172), oklch(0.4 0.04 192))",
-            boxShadow: cart.length > 0
-              ? "0 8px 32px oklch(0.52 0.13 172 / 0.45), 0 2px 8px rgba(0,0,0,0.2)"
-              : "0 4px 16px rgba(0,0,0,0.2)",
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-white/15 flex items-center justify-center relative">
-              <ShoppingCart className="h-4 w-4" />
-              {totalCartons > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-[9px] font-black flex items-center justify-center">
-                  {totalCartons}
-                </span>
-              )}
-            </div>
-            <span className="text-sm">
-              {cart.length === 0 ? "View order" : `${cart.length} item${cart.length !== 1 ? "s" : ""} · ${totalCartons} carton${totalCartons !== 1 ? "s" : ""}`}
+      {/* Floating cart quick access (kept near scroll-to-top arrow) */}
+      <button
+        type="button"
+        onClick={handleCartQuickOpen}
+        className="fixed z-40 h-11 min-w-[52px] px-3 rounded-full flex items-center justify-center gap-2 text-white font-bold transition-all hover:scale-105 active:scale-[0.98]"
+        style={{
+          right: "calc(1.5rem + 3.5rem)",
+          bottom: "calc(1.5rem + env(safe-area-inset-bottom))",
+          background: cart.length > 0
+            ? "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))"
+            : "linear-gradient(135deg, oklch(0.45 0.05 172), oklch(0.4 0.04 192))",
+          boxShadow: cart.length > 0
+            ? "0 8px 24px oklch(0.52 0.13 172 / 0.42), 0 2px 8px rgba(0,0,0,0.2)"
+            : "0 4px 12px rgba(0,0,0,0.2)",
+        }}
+        aria-label="Open cart"
+      >
+        <div className="relative">
+          <ShoppingCart className="h-4 w-4" />
+          {totalCartons > 0 && (
+            <span className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-red-500 text-[9px] font-black flex items-center justify-center">
+              {totalCartons}
             </span>
-          </div>
-          <span className="text-lg font-black">
-            {cart.length > 0 ? `$${subtotal.toFixed(2)}` : "Open cart →"}
-          </span>
-        </button>
-      </div>
+          )}
+        </div>
+        <span className="text-xs md:text-sm">{cart.length > 0 ? `$${subtotal.toFixed(0)}` : "Cart"}</span>
+      </button>
 
       {/* ── Mobile cart sheet ── */}
       {showCartMobile && (
@@ -987,8 +1463,8 @@ export function NewOrderForm() {
         </div>
       )}
 
-      {/* bottom spacer so content isn't hidden behind fixed bar on mobile */}
-      <div className="md:hidden h-20" />
+      {/* bottom spacer so floating controls don't overlap content on mobile */}
+      <div className="h-16 md:h-10" />
     </div>
   );
 }

@@ -300,6 +300,12 @@
   .animate-glow-border {
     animation: glow-border 4s ease-in-out infinite;
   }
+
+  .animate-cta-attention {
+    animation: cta-glow 2.4s ease-in-out infinite, cta-bounce 1.8s ease-in-out infinite;
+    transform-origin: center;
+    will-change: transform, box-shadow;
+  }
 }
 
 @keyframes float {
@@ -315,6 +321,28 @@
 @keyframes glow-border {
   0%, 100% { border-color: oklch(0.55 0.12 176 / 0.2); }
   50% { border-color: oklch(0.55 0.12 176 / 0.5); }
+}
+
+@keyframes cta-glow {
+  0%, 100% {
+    box-shadow:
+      0 14px 28px oklch(0.52 0.13 172 / 0.45),
+      0 4px 14px rgba(0,0,0,0.2),
+      0 0 0 0 oklch(0.56 0.14 172 / 0.35),
+      inset 0 1px 0 rgba(255,255,255,0.28);
+  }
+  50% {
+    box-shadow:
+      0 18px 34px oklch(0.52 0.13 172 / 0.55),
+      0 8px 18px rgba(0,0,0,0.24),
+      0 0 0 8px oklch(0.56 0.14 172 / 0.08),
+      inset 0 1px 0 rgba(255,255,255,0.34);
+  }
+}
+
+@keyframes cta-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
 }
 
 ::selection {

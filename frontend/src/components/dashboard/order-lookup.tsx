@@ -33,7 +33,7 @@ export function OrderLookup() {
   }
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="max-w-2xl mx-auto space-y-6 md:space-y-7">
 
       {/* Header */}
       <div>
@@ -49,7 +49,7 @@ export function OrderLookup() {
       </div>
 
       {/* Search form */}
-      <form onSubmit={handleLookup} className="flex gap-3">
+      <form onSubmit={handleLookup} className="flex gap-3 md:gap-3.5">
         <div className="relative flex-1">
           <Hash className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <input
@@ -57,19 +57,19 @@ export function OrderLookup() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="AJ-2025-0001"
-            className="w-full pl-10 pr-4 py-3 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all text-sm font-mono uppercase tracking-wider"
+            className="w-full pl-10 pr-4 py-3.5 md:py-4 rounded-xl border border-border bg-card text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all text-sm md:text-base lg:text-sm font-mono uppercase tracking-wider"
           />
         </div>
         <button
           type="submit"
           disabled={loading || !input.trim()}
-          className="flex items-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+          className="flex items-center gap-2 px-5 md:px-6 py-3.5 md:py-4 rounded-xl font-semibold text-sm md:text-base lg:text-sm text-white transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
           style={{
             background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))",
             boxShadow: "0 4px 16px oklch(0.52 0.13 172 / 0.3)",
           }}
         >
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+          {loading ? <Loader2 className="h-4 w-4 md:h-5 md:w-5 lg:h-4 lg:w-4 animate-spin" /> : <Search className="h-4 w-4 md:h-5 md:w-5 lg:h-4 lg:w-4" />}
           <span className="hidden sm:block">Look up</span>
         </button>
       </form>
@@ -100,7 +100,7 @@ export function OrderLookup() {
           </div>
 
           {/* Details grid */}
-          <div className="px-5 py-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="px-5 py-4 md:py-5 grid grid-cols-2 sm:grid-cols-4 gap-4 md:gap-5">
             <div className="flex items-start gap-2">
               <Calendar className="h-3.5 w-3.5 text-muted-foreground mt-0.5 shrink-0" />
               <div>
@@ -143,7 +143,7 @@ export function OrderLookup() {
           <div className="px-5 pb-5">
             <button
               onClick={() => setModalOpen(true)}
-              className="group w-full flex items-center justify-center gap-2 py-3 rounded-xl border border-border bg-muted/30 hover:bg-muted text-sm font-semibold text-foreground transition-all hover:border-border"
+              className="group w-full flex items-center justify-center gap-2 py-3.5 md:py-4 rounded-xl border border-border bg-muted/30 hover:bg-muted text-sm md:text-base lg:text-sm font-semibold text-foreground transition-all hover:border-border"
             >
               View full order details
               <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:translate-x-0.5 transition-transform" />
