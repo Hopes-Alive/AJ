@@ -332,7 +332,7 @@ function ProductCard({
               return (
                 <button
                   type="button"
-                  onClick={startSelection}
+                  onClick={() => startSelection()}
                   className="w-full h-11 md:h-12 rounded-xl text-white font-bold text-base md:text-lg lg:text-sm flex items-center justify-center gap-2.5 hover:opacity-90 active:scale-95 transition-all"
                   style={{ background: "linear-gradient(135deg, oklch(0.52 0.13 172), oklch(0.44 0.11 192))" }}
                 >
@@ -350,7 +350,7 @@ function ProductCard({
                     borderColor: "oklch(0.52 0.13 172 / 0.35)",
                   }}
                 >
-                  Qty {cartItem.quantity} · ${cartItem.customPrice.toFixed(2)} each
+                  Qty {cartItem?.quantity ?? 0} · ${(cartItem?.customPrice ?? 0).toFixed(2)} each
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
