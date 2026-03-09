@@ -89,22 +89,6 @@ export function ProductCard({
             </div>
           )}
 
-          {/* Quick info overlay on hover */}
-          <div className="absolute inset-x-0 bottom-0 translate-y-full group-hover/card:translate-y-0 transition-transform duration-400 ease-out z-10 pointer-events-none">
-            <div className="px-3 pb-2.5 pt-6 bg-gradient-to-t from-black/60 to-transparent">
-              {pack && (
-                <span className="inline-flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-white/80 backdrop-blur-sm rounded-md px-2 py-0.5"
-                  style={{
-                    background: "oklch(1 0 0 / 0.08)",
-                    border: "1px solid oklch(1 0 0 / 0.08)",
-                  }}
-                >
-                  <Package className="h-2.5 w-2.5 text-white/60" />
-                  {pack}
-                </span>
-              )}
-            </div>
-          </div>
         </div>
 
         {/* Info area */}
@@ -122,12 +106,9 @@ export function ProductCard({
           </h4>
 
           {pack && (
-            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5 sm:hidden">
-              <span
-                className="inline-block h-1 w-1 rounded-full flex-shrink-0"
-                style={{ background: `oklch(0.55 0.12 ${accentHue} / 0.4)` }}
-              />
-              {pack}
+            <p className="text-[10px] sm:text-[11px] text-muted-foreground mt-1.5 flex items-center gap-1.5">
+              <Package className="h-2.5 w-2.5 flex-shrink-0" />
+              <span className="truncate">{pack}</span>
             </p>
           )}
 

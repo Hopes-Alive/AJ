@@ -36,6 +36,14 @@ const iconMap: Record<string, LucideIcon> = {
   home: Home,
 };
 
+function getCategoryHeroImage(categoryId: string) {
+  const heroByCategory: Record<string, string> = {
+    coffee: "/images/products/coffee-mate.png",
+    honey: "/images/products/panda-pure-honey-1kg.png",
+  };
+  return heroByCategory[categoryId] ?? `/images/categories/${categoryId}.jpg`;
+}
+
 export function CategoryShowcase() {
   return (
     <section className="py-20 sm:py-24 relative overflow-hidden">
@@ -151,7 +159,7 @@ function CategoryCard({
           {!imgError && (
             <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-110">
               <Image
-                src={`/images/categories/${id}.jpg`}
+                src={getCategoryHeroImage(id)}
                 alt={name}
                 fill
                 className="object-cover"

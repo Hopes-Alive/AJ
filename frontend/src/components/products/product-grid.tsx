@@ -30,7 +30,8 @@ const iconMap: Record<string, React.ElementType> = {
 
 const categoryHues: Record<string, number> = {
   beverages: 176,
-  "coffee-honey": 30,
+  coffee: 30,
+  honey: 40,
   tea: 140,
   "dried-fruits-nuts": 50,
   rice: 85,
@@ -42,6 +43,14 @@ const categoryHues: Record<string, number> = {
   "salt-onion": 200,
   household: 220,
 };
+
+function getCategoryHeroImage(categoryId: string) {
+  const heroByCategory: Record<string, string> = {
+    coffee: "/images/products/coffee-mate.png",
+    honey: "/images/products/panda-pure-honey-1kg.png",
+  };
+  return heroByCategory[categoryId] ?? `/images/categories/${categoryId}.jpg`;
+}
 
 export function ProductCatalog() {
   const [catalog, setCatalog] = useState<Category[]>(fallbackCategories);
@@ -615,7 +624,7 @@ function SidebarNav({
                 className="absolute inset-0"
               >
                 <Image
-                  src={`/images/categories/${activeCategoryId}.jpg`}
+                  src={getCategoryHeroImage(activeCategoryId)}
                   alt=""
                   fill
                   className="object-cover scale-110"
@@ -777,7 +786,7 @@ function SidebarNav({
                       }}
                     >
                       <Image
-                        src={`/images/categories/${cat.id}.jpg`}
+                        src={getCategoryHeroImage(cat.id)}
                         alt={cat.name}
                         fill
                         className={`object-cover transition-all duration-500 ${
@@ -910,7 +919,7 @@ function CategoryBanner({
           }}
         >
           <Image
-            src={`/images/categories/${id}.jpg`}
+            src={getCategoryHeroImage(id)}
             alt={name}
             fill
             className="object-cover"

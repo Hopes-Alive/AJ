@@ -130,13 +130,13 @@ export const categories: Category[] = [
     ],
   },
   {
-    id: "coffee-honey",
-    name: "Coffee & Honey",
-    description: "Premium coffee products and natural honey.",
+    id: "coffee",
+    name: "Coffee",
+    description: "Premium coffee products for retail and wholesale.",
     icon: "coffee",
     groups: [
       {
-        id: "coffee",
+        id: "coffee-products",
         name: "Coffee Products",
         products: [
           { name: "Nescafe Classic Jar", image: "/images/products/nescafe-classic-jar.png", pack: "12 × 200 g", price: "$138.00 + GST" },
@@ -144,11 +144,22 @@ export const categories: Category[] = [
           { name: "Coffee Mate", image: "/images/products/coffee-mate.png", pack: "12 × 1 kg", price: "$95.80 + GST" },
         ],
       },
+    ],
+  },
+  {
+    id: "honey",
+    name: "Honey",
+    description: "Natural honey products in multiple pack sizes.",
+    icon: "droplets",
+    groups: [
       {
-        id: "honey",
+        id: "honey-products",
         name: "Honey",
         products: [
           { name: "Asal Honey", image: "/images/products/asal-honey.png", pack: "12 × 1 kg", price: "$192.00 + GST" },
+          { name: "Panda Australia Pure Honey", image: "/images/products/panda-pure-honey-360g.png", pack: "12 × 360 g", price: "$48.00" },
+          { name: "Panda Australia Pure Honey", image: "/images/products/panda-pure-honey-500ml.png", pack: "12 × 500 ml", price: "$72.00" },
+          { name: "Panda Australia Pure Honey", image: "/images/products/panda-pure-honey-1kg.png", pack: "12 × 1 kg", price: "$144.00" },
         ],
       },
     ],
@@ -169,12 +180,12 @@ export const categories: Category[] = [
           { name: "Green Tea Jar (500g)", image: "/images/products/green-tea-jar-500g.png", pack: "12 × 500 g", price: "$66.00" },
           {
             name: "AJ BLACK TEA CARDAMOM FLAVOUR 200 g - AJ0315",
-            image: "/images/products/green-tea-loose.png",
+            image: "/images/products/aj-black-tea-cardamom-200g.png",
             pack: "200 g",
           },
           {
             name: "AJ BLACK TEA CARDAMOM FLAVOUR 500 g - AJ0314",
-            image: "/images/products/green-tea-loose.png",
+            image: "/images/products/aj-black-tea-cardamom-500g.png",
             pack: "500 g",
           },
           {
