@@ -136,3 +136,13 @@ export async function updateOrderStatus(
   if (!json.success) throw new Error(json.error || "Failed to update status");
   return json.data;
 }
+
+export async function deleteOrder(id: string): Promise<void> {
+  const headers = await getAuthHeader();
+  const res = await safeFetch(`${API_BASE}/api/orders/${id}`, {
+    method: "DELETE",
+    headers,
+  });
+  const json = await parseJsonResponse(res);
+  if (!json.success) throw new Error(json.error || "Failed to delete order");
+}

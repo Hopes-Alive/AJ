@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import { getOrders, updateOrderStatus, type Order } from "@/lib/api/orders";
+import { getOrders, updateOrderStatus, deleteOrder, type Order } from "@/lib/api/orders";
 import { OrderStatusBadge, STATUS_CONFIG, ALL_STATUSES } from "./order-status-badge";
 import { OrderDetailModal } from "./order-detail-modal";
 import {
   ChevronDown, Loader2, RefreshCw, ClipboardList,
   MapPin, FileText, Calendar, Package, Check,
-  ExternalLink, TrendingUp, Plus,
+  ExternalLink, TrendingUp, Plus, Trash2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -142,6 +142,7 @@ export function OrderHistory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null);
+  const [deletingOrderId, setDeletingOrderId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [filterStatus, setFilterStatus] = useState<Order["status"] | "all">("all");
@@ -173,6 +174,25 @@ export function OrderHistory() {
       alert(err instanceof Error ? err.message : "Failed to update payment status");
     } finally {
       setUpdatingOrderId(null);
+    }
+  }
+
+  async function handleDeleteOrder(order: Order) {
+    const confirmed = window.confirm(
+      `Delete order ${order.order_number}? This action cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingOrderId(order.id);
+    try {
+      await deleteOrder(order.id);
+      setOrders((prev) => prev.filter((o) => o.id !== order.id));
+      if (expandedId === order.id) setExpandedId(null);
+      if (selectedOrder?.id === order.id) setSelectedOrder(null);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Failed to delete order");
+    } finally {
+      setDeletingOrderId(null);
     }
   }
 
@@ -481,6 +501,22 @@ export function OrderHistory() {
                     {updatingOrderId === order.id ? (
                       <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                     ) : null}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void handleDeleteOrder(order);
+                      }}
+                      disabled={deletingOrderId === order.id}
+                      className="h-8 w-8 rounded-lg border border-destructive/30 bg-destructive/10 text-destructive flex items-center justify-center hover:bg-destructive/15 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+                      aria-label={`Delete order ${order.order_number}`}
+                      title="Delete order"
+                    >
+                      {deletingOrderId === order.id ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Trash2 className="h-3.5 w-3.5" />
+                      )}
+                    </button>
                   </div>
                 </div>
 

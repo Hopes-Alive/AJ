@@ -230,4 +230,40 @@ router.patch("/:id/cancel", async (req: AuthenticatedRequest, res: Response) => 
   res.json(response);
 });
 
+// DELETE /api/orders/:id — permanently delete an order owned by the user
+router.delete("/:id", async (req: AuthenticatedRequest, res: Response) => {
+  const { id } = req.params;
+
+  const { data: existing, error: fetchError } = await supabaseAdmin
+    .from("orders")
+    .select("id, order_number")
+    .eq("id", id)
+    .eq("user_id", req.userId!)
+    .maybeSingle();
+
+  if (fetchError || !existing) {
+    const response: ApiResponse = { success: false, error: "Order not found" };
+    res.status(404).json(response);
+    return;
+  }
+
+  const { error } = await supabaseAdmin
+    .from("orders")
+    .delete()
+    .eq("id", id)
+    .eq("user_id", req.userId!);
+
+  if (error) {
+    const response: ApiResponse = { success: false, error: error.message };
+    res.status(500).json(response);
+    return;
+  }
+
+  const response: ApiResponse = {
+    success: true,
+    message: `Order ${existing.order_number} deleted`,
+  };
+  res.json(response);
+});
+
 export default router;
